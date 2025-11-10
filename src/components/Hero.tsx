@@ -1,13 +1,19 @@
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Airplane, Shield, Clock, CheckCircle } from '@phosphor-icons/react'
+import { Airplane, Shield, Clock, CheckCircle, LockKey } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 
 interface HeroProps {
   onStart: () => void
+  onGuestMode: () => void
 }
 
-export default function Hero({ onStart }: HeroProps) {
+export default function Hero({ onStart, onGuestMode }: HeroProps) {
+  const handleGuestMode = () => {
+    window.open(window.location.href, '_blank', 'noopener,noreferrer')
+    onGuestMode()
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 flex items-center justify-center p-4">
       <div className="max-w-5xl w-full">
@@ -69,18 +75,30 @@ export default function Hero({ onStart }: HeroProps) {
               </div>
             </div>
 
-            <div className="pt-6 border-t">
-              <Button
-                onClick={onStart}
-                size="lg"
-                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground text-lg h-14"
-              >
-                Start Your Trip
-                <Airplane className="ml-2" size={20} />
-              </Button>
+            <div className="pt-6 border-t space-y-3">
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleGuestMode}
+                  size="lg"
+                  variant="outline"
+                  className="flex-1 text-lg h-14"
+                >
+                  <LockKey className="mr-2" size={20} />
+                  Guest Mode (No data saved)
+                </Button>
+                
+                <Button
+                  onClick={onStart}
+                  size="lg"
+                  className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-lg h-14"
+                >
+                  Sign in using Google
+                  <Airplane className="ml-2" size={20} />
+                </Button>
+              </div>
               
               <p className="text-center text-sm text-muted-foreground mt-4">
-                From $8 per trip • No account required • 195+ countries
+                From $5 per trip • No account required • 195+ countries
               </p>
             </div>
           </Card>

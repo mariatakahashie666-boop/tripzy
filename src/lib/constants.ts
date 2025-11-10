@@ -83,7 +83,7 @@ export const calculatePrice = (
   hoursUntilDeparture: number,
   connectingCountries: number
 ): number => {
-  let price = 8
+  let price = 5
   
   if (documentCount > 2) {
     price += (documentCount - 2) * 2

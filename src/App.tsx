@@ -27,6 +27,10 @@ function App() {
     setCurrentStep(1)
   }
 
+  const handleGuestMode = () => {
+    setCurrentStep(1)
+  }
+
   const handleUploadComplete = (files: File[]) => {
     setUploadedFiles(files)
     setCurrentStep(2)
@@ -48,7 +52,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      {currentStep === 0 && <Hero onStart={handleStart} />}
+      {currentStep === 0 && <Hero onStart={handleStart} onGuestMode={handleGuestMode} />}
       
       {currentStep > 0 && (
         <>
