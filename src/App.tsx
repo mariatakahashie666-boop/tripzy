@@ -42,7 +42,7 @@ function App() {
     setCurrentStep(4)
   }
 
-  const handlePaymentComplete = () => {
+  const handlePaymentComplete = (plan: 'standard' | 'premium') => {
     setCurrentStep(5)
   }
 
