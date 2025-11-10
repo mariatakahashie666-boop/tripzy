@@ -15,24 +15,24 @@ export default function Hero({ onStart, onGuestMode }: HeroProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 flex items-center justify-center p-4 py-8 md:py-4">
       <div className="max-w-5xl w-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center space-y-6 mb-12"
+          className="text-center space-y-4 md:space-y-6 mb-8 md:mb-12"
         >
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Airplane className="text-accent" size={48} weight="duotone" />
-            <h1 className="text-5xl font-bold tracking-tight">Tripzy</h1>
+          <div className="flex items-center justify-center gap-3 mb-2 md:mb-4">
+            <Airplane className="text-accent" size={40} weight="duotone" />
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Tripzy</h1>
           </div>
           
-          <p className="text-2xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
             Scan your passport and flight ticket. We'll handle all your travel documents.
           </p>
           
-          <p className="text-lg text-foreground/70 max-w-xl mx-auto">
+          <p className="text-base md:text-lg text-foreground/70 max-w-xl mx-auto">
             Stop wasting hours filling forms and risking scam websites. Get verified, pre-filled documents in 10 minutes.
           </p>
         </motion.div>
@@ -42,9 +42,9 @@ export default function Hero({ onStart, onGuestMode }: HeroProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <Card className="p-8 space-y-6 shadow-lg">
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="text-center space-y-3">
+          <Card className="p-6 md:p-8 space-y-4 md:space-y-6 shadow-lg">
+            <div className="grid md:grid-cols-3 gap-4 md:gap-6">
+              <div className="text-center space-y-2 md:space-y-3">
                 <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto">
                   <Clock className="text-accent" size={24} weight="duotone" />
                 </div>
@@ -54,7 +54,7 @@ export default function Hero({ onStart, onGuestMode }: HeroProps) {
                 </p>
               </div>
 
-              <div className="text-center space-y-3">
+              <div className="text-center space-y-2 md:space-y-3">
                 <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mx-auto">
                   <Shield className="text-success" size={24} weight="duotone" />
                 </div>
@@ -64,7 +64,7 @@ export default function Hero({ onStart, onGuestMode }: HeroProps) {
                 </p>
               </div>
 
-              <div className="text-center space-y-3">
+              <div className="text-center space-y-2 md:space-y-3">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
                   <CheckCircle className="text-primary" size={24} weight="duotone" />
                 </div>
@@ -76,12 +76,12 @@ export default function Hero({ onStart, onGuestMode }: HeroProps) {
             </div>
 
             <div className="pt-6 border-t space-y-3">
-              <div className="flex gap-3">
+              <div className="flex flex-col md:flex-row gap-3">
                 <Button
                   onClick={handleGuestMode}
                   size="lg"
                   variant="outline"
-                  className="flex-1 text-lg h-14"
+                  className="w-full md:flex-1 text-base md:text-lg h-12 md:h-14"
                 >
                   <LockKey className="mr-2" size={20} />
                   Guest Mode (No data saved)
@@ -90,7 +90,7 @@ export default function Hero({ onStart, onGuestMode }: HeroProps) {
                 <Button
                   onClick={onStart}
                   size="lg"
-                  className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-lg h-14"
+                  className="w-full md:flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-base md:text-lg h-12 md:h-14"
                 >
                   Sign in using Google
                   <Airplane className="ml-2" size={20} />
