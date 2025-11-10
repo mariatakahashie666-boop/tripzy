@@ -1,23 +1,98 @@
 import { ExtractedData, TripRequirement, TravelDocument } from '@/types'
 
+const convertFileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      resolve(result.split(',')[1])
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
 export const simulateDocumentExtraction = async (files: File[]): Promise<ExtractedData> => {
-  await new Promise(resolve => setTimeout(resolve, 2000))
-  
-  const confidence = 92 + Math.random() * 7
-  
-  return {
-    firstName: 'JUAN PEDRO',
-    lastName: 'DELA CRUZ',
-    passportNumber: 'P1234567',
-    dateOfBirth: '1990-05-15',
-    nationality: 'Philippines',
-    passportExpiry: '2028-12-31',
-    origin: 'Manila, Philippines',
-    destination: 'Bangkok, Thailand',
-    departureDate: '2025-12-15',
-    returnDate: '2025-12-22',
-    flightNumber: 'PR732',
-    confidence: Math.round(confidence)
+  try {
+    const passportFile = files[0]
+    const ticketFile = files[1]
+    
+    const passportBase64 = await convertFileToBase64(passportFile)
+    const ticketBase64 = files.length > 1 ? await convertFileToBase64(ticketFile) : null
+    
+    const passportPrompt = `You are a document extraction AI. Analyze this passport image and extract the following information in JSON format:
+    - firstName (first/given name as shown on passport, all caps)
+    - lastName (surname/family name as shown on passport, all caps)
+    - passportNumber (passport number)
+    - dateOfBirth (format: YYYY-MM-DD)
+    - nationality (country of citizenship)
+    - passportExpiry (expiry date, format: YYYY-MM-DD)
+    
+    If you cannot read a field clearly, make your best estimate based on what you can see.
+    
+    Image data: data:image/jpeg;base64,${passportBase64}
+    
+    Return ONLY a valid JSON object with these exact field names. No additional text.`
+    
+    const passportData = await window.spark.llm(passportPrompt, "gpt-4o", true)
+    const parsedPassport = JSON.parse(passportData)
+    
+    let travelData = {
+      origin: '',
+      destination: '',
+      departureDate: '',
+      returnDate: '',
+      flightNumber: ''
+    }
+    
+    if (ticketBase64) {
+      const ticketPrompt = `You are a document extraction AI. Analyze this flight ticket/booking confirmation and extract the following information in JSON format:
+      - origin (departure city and country)
+      - destination (arrival city and country)
+      - departureDate (format: YYYY-MM-DD)
+      - returnDate (format: YYYY-MM-DD, if shown; otherwise use empty string)
+      - flightNumber (e.g., PR732)
+      
+      If you cannot read a field clearly, make your best estimate.
+      
+      Image data: data:image/jpeg;base64,${ticketBase64}
+      
+      Return ONLY a valid JSON object with these exact field names. No additional text.`
+      
+      const ticketData = await window.spark.llm(ticketPrompt, "gpt-4o", true)
+      travelData = JSON.parse(ticketData)
+    }
+    
+    return {
+      firstName: parsedPassport.firstName || '',
+      lastName: parsedPassport.lastName || '',
+      passportNumber: parsedPassport.passportNumber || '',
+      dateOfBirth: parsedPassport.dateOfBirth || '',
+      nationality: parsedPassport.nationality || '',
+      passportExpiry: parsedPassport.passportExpiry || '',
+      origin: travelData.origin || '',
+      destination: travelData.destination || '',
+      departureDate: travelData.departureDate || '',
+      returnDate: travelData.returnDate || '',
+      flightNumber: travelData.flightNumber || '',
+      confidence: 95
+    }
+  } catch (error) {
+    console.error('Error extracting document data:', error)
+    return {
+      firstName: '',
+      lastName: '',
+      passportNumber: '',
+      dateOfBirth: '',
+      nationality: '',
+      passportExpiry: '',
+      origin: '',
+      destination: '',
+      departureDate: '',
+      returnDate: '',
+      flightNumber: '',
+      confidence: 0
+    }
   }
 }
 
