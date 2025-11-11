@@ -30,11 +30,11 @@ export const simulateDocumentExtraction = async (files: File[]): Promise<Extract
     const passportDataUrl = await convertFileToBase64(passportFile)
     console.log('Passport converted to base64, length:', passportDataUrl.length)
     
-    const passportPrompt = (window as any).spark.llmPrompt`You are an expert document extraction AI specialized in reading passports and travel documents.
+    const passportPrompt = (window.spark.llmPrompt as any)`You are an expert document extraction AI specialized in reading passports and travel documents.
 
 Analyze the provided passport image carefully and extract ALL visible information with extreme accuracy.
 
-The image is: ${passportDataUrl}
+The passport image data (base64 data URL): ${passportDataUrl}
 
 CRITICAL INSTRUCTIONS:
 1. Look at the MRZ (Machine Readable Zone) at the bottom of the passport - it's two lines of text with <<< symbols
@@ -47,29 +47,23 @@ CRITICAL INSTRUCTIONS:
 8. Passport number is usually at top right and in MRZ
 9. Nationality should be the full country name in English
 
-Return a JSON object with a "data" property containing:
-- firstName: Given name(s) exactly as shown
-- lastName: Surname exactly as shown  
-- passportNumber: Full passport number
-- dateOfBirth: In YYYY-MM-DD format
-- nationality: Full country name
-- passportExpiry: In YYYY-MM-DD format
-
-Example response:
+Return ONLY a valid JSON object (no markdown, no explanation) with this exact structure:
 {
   "data": {
-    "firstName": "JUAN PEDRO",
-    "lastName": "DELA CRUZ",
-    "passportNumber": "P1234567A",
-    "dateOfBirth": "1990-05-15",
-    "nationality": "Philippines",
-    "passportExpiry": "2030-12-31"
+    "firstName": "string (given name exactly as shown)",
+    "lastName": "string (surname exactly as shown)",
+    "passportNumber": "string (full passport number)",
+    "dateOfBirth": "YYYY-MM-DD",
+    "nationality": "string (full country name)",
+    "passportExpiry": "YYYY-MM-DD"
   }
-}`
+}
+
+If you cannot read any field clearly, use an empty string "" for that field.`
     
     console.log('Sending passport to AI for analysis...')
     
-    const passportResponse = await (window as any).spark.llm(passportPrompt, "gpt-4o", true)
+    const passportResponse = await window.spark.llm(passportPrompt, "gpt-4o", true)
     console.log('AI Response (Passport):', passportResponse)
     
     const parsedPassportResponse = JSON.parse(passportResponse)
@@ -90,11 +84,11 @@ Example response:
         const ticketDataUrl = await convertFileToBase64(ticketFile)
         console.log('Ticket converted to base64, length:', ticketDataUrl.length)
         
-        const ticketPrompt = (window as any).spark.llmPrompt`You are an expert document extraction AI specialized in reading flight tickets, boarding passes, and booking confirmations.
+        const ticketPrompt = (window.spark.llmPrompt as any)`You are an expert document extraction AI specialized in reading flight tickets, boarding passes, and booking confirmations.
 
 Analyze the provided flight/travel document carefully.
 
-The image is: ${ticketDataUrl}
+The flight ticket/booking confirmation image data (base64 data URL): ${ticketDataUrl}
 
 CRITICAL INSTRUCTIONS:
 1. Look for airport codes (3-letter IATA codes like MNL, BKK, HKG, SIN, etc.)
@@ -104,27 +98,22 @@ CRITICAL INSTRUCTIONS:
 5. Convert all dates to YYYY-MM-DD format (handle formats like "15 DEC 2024", "Dec 15", "12/15/24")
 6. Include both city AND country for origin/destination
 
-Return a JSON object with a "data" property containing:
-- origin: Departure city and country (format: "City, Country")
-- destination: Arrival city and country (format: "City, Country")  
-- departureDate: Departure date in YYYY-MM-DD format
-- returnDate: Return date in YYYY-MM-DD format (use "" if one-way or not visible)
-- flightNumber: Full flight number with airline code
-
-Example response:
+Return ONLY a valid JSON object (no markdown, no explanation) with this exact structure:
 {
   "data": {
-    "origin": "Manila, Philippines",
-    "destination": "Bangkok, Thailand",
-    "departureDate": "2024-12-15",
-    "returnDate": "2024-12-22",
-    "flightNumber": "PR732"
+    "origin": "City, Country",
+    "destination": "City, Country",
+    "departureDate": "YYYY-MM-DD",
+    "returnDate": "YYYY-MM-DD (or empty string if one-way)",
+    "flightNumber": "string (full flight number with airline code)"
   }
-}`
+}
+
+If you cannot read any field clearly, use an empty string "" for that field.`
         
         console.log('Sending ticket to AI for analysis...')
         
-        const ticketResponse = await (window as any).spark.llm(ticketPrompt, "gpt-4o", true)
+        const ticketResponse = await window.spark.llm(ticketPrompt, "gpt-4o", true)
         console.log('AI Response (Ticket):', ticketResponse)
         
         const parsedTravelResponse = JSON.parse(ticketResponse)
