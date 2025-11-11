@@ -30,22 +30,24 @@ export const simulateDocumentExtraction = async (files: File[]): Promise<Extract
     const passportDataUrl = await convertFileToBase64(passportFile)
     console.log('Passport converted to base64, length:', passportDataUrl.length)
     
-    const passportPrompt = (window.spark.llmPrompt as any)`You are an expert document extraction AI specialized in reading passports and travel documents.
+    const passportPrompt = window.spark.llmPrompt`You are an expert document extraction AI specialized in reading passports and travel documents.
 
 Analyze the provided passport image carefully and extract ALL visible information with extreme accuracy.
 
-The passport image data (base64 data URL): ${passportDataUrl}
+The passport image is provided as base64 data URL. IMPORTANT: You must analyze the actual image content.
+
+Base64 Image Data: ${passportDataUrl}
 
 CRITICAL INSTRUCTIONS:
 1. Look at the MRZ (Machine Readable Zone) at the bottom of the passport - it's two lines of text with <<< symbols
 2. MRZ first line format: P<COUNTRY_CODE<SURNAME<<GIVEN_NAMES<<<<<<<<<<<<<<
 3. MRZ second line format: PASSPORT_NUMBER<NATIONALITY<BIRTH_DATE<SEX<EXPIRY_DATE
 4. Names in MRZ use << to separate surname from given names, and < for spaces within names
-5. Dates in MRZ are YYMMDD - convert to YYYY-MM-DD (dates 00-30 are 2000s, 31-99 are 1900s)
-6. Also read the human-readable text at the top of the passport
+5. Dates in MRZ are YYMMDD format - convert to YYYY-MM-DD (dates 00-30 are 2000s, 31-99 are 1900s)
+6. Also read the human-readable text at the top of the passport for verification
 7. Extract names EXACTLY as shown - preserve capitalization (e.g., "DELA CRUZ" not "dela cruz")
 8. Passport number is usually at top right and in MRZ
-9. Nationality should be the full country name in English
+9. Nationality should be the full country name in English (e.g., "Philippines" not "PHL")
 
 Return ONLY a valid JSON object (no markdown, no explanation) with this exact structure:
 {
@@ -59,7 +61,7 @@ Return ONLY a valid JSON object (no markdown, no explanation) with this exact st
   }
 }
 
-If you cannot read any field clearly, use an empty string "" for that field.`
+If you cannot read any field clearly, use an empty string "" for that field. Do not make up or guess information.`
     
     console.log('Sending passport to AI for analysis...')
     
@@ -84,11 +86,11 @@ If you cannot read any field clearly, use an empty string "" for that field.`
         const ticketDataUrl = await convertFileToBase64(ticketFile)
         console.log('Ticket converted to base64, length:', ticketDataUrl.length)
         
-        const ticketPrompt = (window.spark.llmPrompt as any)`You are an expert document extraction AI specialized in reading flight tickets, boarding passes, and booking confirmations.
+        const ticketPrompt = window.spark.llmPrompt`You are an expert document extraction AI specialized in reading flight tickets, boarding passes, and booking confirmations.
 
 Analyze the provided flight/travel document carefully.
 
-The flight ticket/booking confirmation image data (base64 data URL): ${ticketDataUrl}
+The flight ticket/booking confirmation image is provided as base64 data URL: ${ticketDataUrl}
 
 CRITICAL INSTRUCTIONS:
 1. Look for airport codes (3-letter IATA codes like MNL, BKK, HKG, SIN, etc.)
@@ -109,7 +111,7 @@ Return ONLY a valid JSON object (no markdown, no explanation) with this exact st
   }
 }
 
-If you cannot read any field clearly, use an empty string "" for that field.`
+If you cannot read any field clearly, use an empty string "" for that field. Do not make up or guess information.`
         
         console.log('Sending ticket to AI for analysis...')
         

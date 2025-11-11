@@ -10,20 +10,22 @@ interface UserInfo {
   login: string
 }
 
+interface SparkAPI {
+  llmPrompt: (strings: TemplateStringsArray, ...values: any[]) => string
+  llm: (prompt: string, modelName?: string, jsonMode?: boolean) => Promise<string>
+  user: () => Promise<UserInfo>
+  kv: {
+    keys: () => Promise<string[]>
+    get: <T>(key: string) => Promise<T | undefined>
+    set: <T>(key: string, value: T) => Promise<void>
+    delete: (key: string) => Promise<void>
+  }
+}
+
 declare global {
   interface Window {
-    spark: {
-      llmPrompt: (strings: TemplateStringsArray, ...values: any[]) => string
-      llm: (prompt: string, modelName?: string, jsonMode?: boolean) => Promise<string>
-      user: () => Promise<UserInfo>
-      kv: {
-        keys: () => Promise<string[]>
-        get: <T>(key: string) => Promise<T | undefined>
-        set: <T>(key: string, value: T) => Promise<void>
-        delete: (key: string) => Promise<void>
-      }
-    }
+    spark: SparkAPI
   }
   
-  const spark: Window['spark']
+  const spark: SparkAPI
 }
