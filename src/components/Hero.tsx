@@ -10,7 +10,6 @@ interface HeroProps {
 
 export default function Hero({ onStart, onGuestMode }: HeroProps) {
   const handleGuestMode = () => {
-    window.open(window.location.href, '_blank', 'noopener,noreferrer')
     onGuestMode()
   }
 
