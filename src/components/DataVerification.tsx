@@ -45,21 +45,24 @@ export default function DataVerification({ files, onVerified }: DataVerification
   if (isLoading || !extractedData) {
     return (
       <div className="max-w-4xl mx-auto p-4 flex items-center justify-center min-h-[60vh]">
-        <Card className="p-8 text-center space-y-4">
+        <Card className="p-8 text-center space-y-4 max-w-md">
           <div className="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
           <h3 className="text-xl font-semibold">Scanning Your Documents...</h3>
           <p className="text-muted-foreground">
-            Our AI is reading your passport and flight ticket to extract your real information
+            Our AI is analyzing your passport and flight ticket using GPT-4 vision to extract your real information
           </p>
           <p className="text-sm text-muted-foreground">
-            This may take 10-20 seconds
+            This may take 10-30 seconds depending on image quality
           </p>
         </Card>
       </div>
     )
   }
 
-  const lowConfidence = extractedData.confidence < 90
+  const lowConfidence = extractedData.confidence < 85
+  const veryLowConfidence = extractedData.confidence < 50
+  const noDataExtracted = extractedData.confidence === 0 || 
+    (!extractedData.firstName && !extractedData.lastName && !extractedData.passportNumber)
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -71,7 +74,53 @@ export default function DataVerification({ files, onVerified }: DataVerification
         </div>
       </div>
 
-      {lowConfidence && (
+      {noDataExtracted && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card className="p-4 bg-destructive/10 border-destructive">
+            <div className="flex items-start gap-3">
+              <Warning size={24} className="text-destructive flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-destructive">Unable to Read Documents</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Our AI couldn't extract information from your documents. Please ensure:
+                </p>
+                <ul className="text-sm text-muted-foreground mt-2 space-y-1 list-disc list-inside">
+                  <li>Images are clear and well-lit</li>
+                  <li>Text is not blurry or obscured</li>
+                  <li>The entire document is visible in the photo</li>
+                </ul>
+                <p className="text-sm text-muted-foreground mt-2">
+                  You can manually enter your information below.
+                </p>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {!noDataExtracted && veryLowConfidence && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card className="p-4 bg-destructive/10 border-destructive">
+            <div className="flex items-start gap-3">
+              <Warning size={24} className="text-destructive flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-destructive">Very Low Confidence Scan</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Confidence: {extractedData.confidence}% - We had difficulty reading your documents. Please verify all fields very carefully and correct any errors.
+                </p>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {!noDataExtracted && !veryLowConfidence && lowConfidence && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}

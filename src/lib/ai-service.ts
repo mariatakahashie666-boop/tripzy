@@ -14,49 +14,71 @@ const convertFileToBase64 = (file: File): Promise<string> => {
 
 export const simulateDocumentExtraction = async (files: File[]): Promise<ExtractedData> => {
   try {
+    if (!files || files.length === 0) {
+      throw new Error('No files provided for extraction')
+    }
+
     const passportFile = files[0]
-    const ticketFile = files[1]
+    const ticketFile = files.length > 1 ? files[1] : null
+    
+    console.log('Starting document extraction...')
+    console.log('Passport file:', passportFile.name, passportFile.type, passportFile.size)
+    if (ticketFile) {
+      console.log('Ticket file:', ticketFile.name, ticketFile.type, ticketFile.size)
+    }
     
     const passportDataUrl = await convertFileToBase64(passportFile)
-    const ticketDataUrl = files.length > 1 ? await convertFileToBase64(ticketFile) : null
+    console.log('Passport converted to base64, length:', passportDataUrl.length)
     
-    const passportPromptText = `You are an expert document extraction AI specialized in reading passports and travel documents. 
+    const passportPromptText = `You are an expert document extraction AI specialized in reading passports and travel documents.
 
-Carefully analyze the passport image provided below and extract ALL visible information with extreme accuracy.
+Analyze the provided image carefully. It should contain a passport or travel document.
 
-Extract the following information and return it in a JSON object with a single property called "data" that contains:
-- firstName: The given name(s) / first name as shown on passport (exactly as written)
-- lastName: The surname / family name / last name as shown on passport (exactly as written)
-- passportNumber: The passport/document number
-- dateOfBirth: Date of birth in YYYY-MM-DD format
-- nationality: Country of citizenship (full country name)
-- passportExpiry: Passport expiration date in YYYY-MM-DD format
+Extract ALL visible information with extreme accuracy and return it as a JSON object with a single property "data".
 
-IMPORTANT INSTRUCTIONS:
-1. Extract names EXACTLY as they appear on the passport - preserve capitalization, spacing, and formatting
-2. Look carefully at the MRZ (machine readable zone) at the bottom if present - it contains accurate data
-3. For dates, convert to YYYY-MM-DD format (e.g., "15 MAY 1990" becomes "1990-05-15")
-4. If you cannot read a field with 100% confidence, extract your best reading but note lower confidence
-5. Return ONLY the JSON object, no additional text
+Required fields to extract:
+- firstName: Given name(s) / first name (exactly as shown, preserve all caps if present)
+- lastName: Surname / family name / last name (exactly as shown)
+- passportNumber: The passport/document number (letters and numbers)
+- dateOfBirth: Birth date in YYYY-MM-DD format
+- nationality: Country of citizenship (full country name in English)
+- passportExpiry: Expiration date in YYYY-MM-DD format
 
-Passport image: ${passportDataUrl}
+CRITICAL INSTRUCTIONS:
+1. Look at the MRZ (Machine Readable Zone) at the bottom of the passport first - it's the most accurate
+2. In the MRZ, the first line typically contains: document type, country code, and surname<<given names
+3. The second line contains: passport number, nationality, birth date, sex, expiry date
+4. Names in MRZ use << as separator between surname and given names, and < for spaces
+5. Dates in MRZ are in YYMMDD format - convert to YYYY-MM-DD (be careful with century!)
+6. Cross-reference MRZ data with the human-readable section above
+7. Extract names EXACTLY - if it says "DELA CRUZ" keep it as "DELA CRUZ", not "dela cruz"
+8. For dates like "15 MAY 90", determine if it's 1990 or 2090 based on context
+9. If any field is unclear, provide your best extraction
 
-Return format:
+Return ONLY valid JSON in this exact format:
 {
   "data": {
-    "firstName": "...",
-    "lastName": "...",
-    "passportNumber": "...",
+    "firstName": "ACTUAL NAME FROM DOCUMENT",
+    "lastName": "ACTUAL SURNAME FROM DOCUMENT",
+    "passportNumber": "ACTUAL NUMBER",
     "dateOfBirth": "YYYY-MM-DD",
-    "nationality": "...",
+    "nationality": "COUNTRY NAME",
     "passportExpiry": "YYYY-MM-DD"
   }
-}`
+}
+
+DO NOT include any explanatory text, only the JSON object.`
     
-    const passportPrompt = window.spark.llmPrompt([passportPromptText], passportDataUrl)
-    const passportData = await window.spark.llm(passportPrompt, "gpt-4o", true)
-    const parsedPassportResponse = JSON.parse(passportData)
+    const passportPrompt = window.spark.llmPrompt([passportPromptText])
+    console.log('Sending passport to AI for analysis...')
+    
+    const passportResponse = await window.spark.llm(passportPrompt, "gpt-4o", true)
+    console.log('AI Response (Passport):', passportResponse)
+    
+    const parsedPassportResponse = JSON.parse(passportResponse)
     const parsedPassport = parsedPassportResponse.data || parsedPassportResponse
+    
+    console.log('Parsed passport data:', parsedPassport)
     
     let travelData = {
       origin: '',
@@ -66,48 +88,77 @@ Return format:
       flightNumber: ''
     }
     
-    if (ticketDataUrl) {
-      const ticketPromptText = `You are an expert document extraction AI specialized in reading flight tickets, boarding passes, and booking confirmations.
+    if (ticketFile) {
+      try {
+        const ticketDataUrl = await convertFileToBase64(ticketFile)
+        console.log('Ticket converted to base64, length:', ticketDataUrl.length)
+        
+        const ticketPromptText = `You are an expert document extraction AI specialized in reading flight tickets, boarding passes, and booking confirmations.
 
-Carefully analyze the flight ticket/booking confirmation image provided below and extract ALL visible flight information.
+Analyze the provided image carefully. It should contain flight/travel information.
 
-Extract the following information and return it in a JSON object with a single property called "data" that contains:
-- origin: Departure city and country (e.g., "Manila, Philippines")
-- destination: Arrival city and country (e.g., "Bangkok, Thailand")
+Extract ALL visible travel information and return it as a JSON object with a single property "data".
+
+Required fields to extract:
+- origin: Departure city and country (format: "City, Country")
+- destination: Arrival city and country (format: "City, Country")
 - departureDate: Departure date in YYYY-MM-DD format
-- returnDate: Return date in YYYY-MM-DD format (if shown; otherwise use empty string "")
-- flightNumber: Flight number with airline code (e.g., "PR732", "TG123")
+- returnDate: Return date in YYYY-MM-DD format (empty string "" if not visible or one-way)
+- flightNumber: Flight number with airline code (e.g., "PR732", "CX123")
 
-IMPORTANT INSTRUCTIONS:
-1. Look for departure/origin city and arrival/destination city
-2. Extract the FULL flight number including airline code
-3. Convert all dates to YYYY-MM-DD format
-4. If this is a one-way ticket with no return date, set returnDate to ""
-5. Include country names for origin and destination
-6. Return ONLY the JSON object, no additional text
+IMPORTANT:
+1. Look for airport codes (MNL, BKK, HKG, etc.) and convert them to city names
+2. Common codes: MNL=Manila, BKK=Bangkok, HKG=Hong Kong, SIN=Singapore, TPE=Taipei
+3. Extract the COMPLETE flight number including airline prefix
+4. Convert all dates to YYYY-MM-DD format
+5. Include the country name for both origin and destination
+6. If no return date is shown, use empty string ""
 
-Flight ticket image: ${ticketDataUrl}
-
-Return format:
+Return ONLY valid JSON in this exact format:
 {
   "data": {
     "origin": "City, Country",
     "destination": "City, Country",
     "departureDate": "YYYY-MM-DD",
-    "returnDate": "YYYY-MM-DD or empty string",
+    "returnDate": "YYYY-MM-DD or empty",
     "flightNumber": "XX123"
   }
-}`
-      
-      const ticketPrompt = window.spark.llmPrompt([ticketPromptText], ticketDataUrl)
-      const ticketData = await window.spark.llm(ticketPrompt, "gpt-4o", true)
-      const parsedTravelResponse = JSON.parse(ticketData)
-      travelData = parsedTravelResponse.data || parsedTravelResponse
+}
+
+DO NOT include any explanatory text, only the JSON object.`
+        
+        const ticketPrompt = window.spark.llmPrompt([ticketPromptText])
+        console.log('Sending ticket to AI for analysis...')
+        
+        const ticketResponse = await window.spark.llm(ticketPrompt, "gpt-4o", true)
+        console.log('AI Response (Ticket):', ticketResponse)
+        
+        const parsedTravelResponse = JSON.parse(ticketResponse)
+        travelData = parsedTravelResponse.data || parsedTravelResponse
+        
+        console.log('Parsed travel data:', travelData)
+      } catch (ticketError) {
+        console.error('Error extracting ticket data (will continue with passport data only):', ticketError)
+      }
     }
     
-    const confidence = (parsedPassport.firstName && parsedPassport.lastName && parsedPassport.passportNumber) ? 95 : 70
+    const hasRequiredPassportFields = parsedPassport.firstName && parsedPassport.lastName && parsedPassport.passportNumber
+    const hasGoodTravelData = travelData.origin && travelData.destination && travelData.departureDate
     
-    return {
+    let confidence = 0
+    if (hasRequiredPassportFields && hasGoodTravelData) {
+      confidence = 95
+    } else if (hasRequiredPassportFields) {
+      confidence = 85
+    } else if (parsedPassport.firstName || parsedPassport.lastName) {
+      confidence = 60
+    } else {
+      confidence = 30
+    }
+    
+    console.log('Final confidence:', confidence)
+    
+    const result = {
       firstName: parsedPassport.firstName || '',
       lastName: parsedPassport.lastName || '',
       passportNumber: parsedPassport.passportNumber || '',
@@ -121,8 +172,13 @@ Return format:
       flightNumber: travelData.flightNumber || '',
       confidence
     }
+    
+    console.log('Final extracted data:', result)
+    return result
+    
   } catch (error) {
-    console.error('Error extracting document data:', error)
+    console.error('CRITICAL ERROR in document extraction:', error)
+    
     return {
       firstName: '',
       lastName: '',
