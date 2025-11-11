@@ -13,11 +13,11 @@ A passport and flight ticket scanning tool that automatically identifies and pre
 ## Essential Features
 
 ### Document Upload & Scanning
-**Functionality**: Users upload passport, flight ticket, and optional supporting documents (hotel, bank statements) via drag-and-drop or file picker.
-**Purpose**: Capture all necessary information to identify travel requirements and pre-fill forms.
+**Functionality**: Users upload passport, flight ticket, and optional supporting documents (hotel, bank statements) via drag-and-drop or file picker. Before upload, users can preview each document in full-screen to verify clarity.
+**Purpose**: Capture all necessary information to identify travel requirements and pre-fill forms. Preview ensures document quality before processing, reducing extraction errors.
 **Trigger**: User lands on homepage and clicks "Start Your Trip" or navigates to upload page.
-**Progression**: Land on hero page → Click "Start" → Upload passport image → Upload flight ticket → Optionally upload 3 more documents → AI processes uploads → Display extracted data
-**Success Criteria**: Images successfully uploaded, AI extracts name, passport number, nationality, origin, destination, dates with 95%+ accuracy.
+**Progression**: Land on hero page → Click "Start" → Select passport image → Preview full document with clarity checklist → Confirm or retake → Upload passport → Select flight ticket → Preview ticket → Confirm or retake → Upload ticket → Optionally add 3 more documents with preview → AI processes uploads → Display extracted data
+**Success Criteria**: Images successfully uploaded with preview confirmation, clarity guidelines displayed (readable text, no blur, all corners visible, no glare), thumbnail previews shown in upload list, users can review uploaded images before continuing, AI extracts name, passport number, nationality, origin, destination, dates with 95%+ accuracy.
 
 ### AI Data Extraction & Verification
 **Functionality**: AI scans documents using GPT-4o vision to extract traveler information, then displays extracted data in editable form for user verification. Uses advanced OCR to read passport MRZ zones and flight ticket details with high accuracy.
