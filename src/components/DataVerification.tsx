@@ -49,7 +49,10 @@ export default function DataVerification({ files, onVerified }: DataVerification
           <div className="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
           <h3 className="text-xl font-semibold">Scanning Your Documents...</h3>
           <p className="text-muted-foreground">
-            Our AI is extracting information from your passport and ticket
+            Our AI is reading your passport and flight ticket to extract your real information
+          </p>
+          <p className="text-sm text-muted-foreground">
+            This may take 10-20 seconds
           </p>
         </Card>
       </div>

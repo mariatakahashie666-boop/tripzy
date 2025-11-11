@@ -20,11 +20,11 @@ A passport and flight ticket scanning tool that automatically identifies and pre
 **Success Criteria**: Images successfully uploaded, AI extracts name, passport number, nationality, origin, destination, dates with 95%+ accuracy.
 
 ### AI Data Extraction & Verification
-**Functionality**: AI scans documents to extract traveler information, then displays extracted data in editable form for user verification.
-**Purpose**: Ensure accuracy before generating documents, giving users control and catching AI mistakes.
+**Functionality**: AI scans documents using GPT-4o vision to extract traveler information, then displays extracted data in editable form for user verification. Uses advanced OCR to read passport MRZ zones and flight ticket details with high accuracy.
+**Purpose**: Ensure accuracy before generating documents, giving users control and catching AI mistakes. Extracts names EXACTLY as they appear on documents.
 **Trigger**: After document upload completes.
-**Progression**: AI processes images → Display extracted fields (name, passport, DOB, nationality, flight details) → Show warning "Please check carefully" → User edits any incorrect fields → User confirms "Yes, Proceed"
-**Success Criteria**: All critical fields extracted and displayed, users can edit any field, confirmation required before proceeding.
+**Progression**: AI processes images (10-20 seconds) → GPT-4o analyzes passport photo and MRZ zone → Extracts flight details from ticket → Display extracted fields (name, passport, DOB, nationality, flight details) → Show warning "Please check carefully" → Show confidence score (if <90%, highlight uncertain fields) → User edits any incorrect fields → User confirms "Yes, Proceed"
+**Success Criteria**: All critical fields extracted with 95%+ accuracy, names match passport exactly, users can edit any field, confidence score displayed, confirmation required before proceeding.
 
 ### Requirements Analysis & Checklist
 **Functionality**: AI determines required documents based on origin, destination, and nationality, then displays comprehensive checklist.
