@@ -84,24 +84,24 @@ export default function DataVerification({ files, onVerified }: DataVerification
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Card className="p-4 bg-destructive/10 border-destructive">
-            <div className="flex items-start gap-3">
-              <Warning size={24} className="text-destructive flex-shrink-0 mt-0.5" />
+          <Card className="p-2 bg-destructive/10 border-destructive">
+            <div className="flex items-start gap-2">
+              <Warning size={16} className="text-destructive flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-destructive">Unable to Read Documents</p>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm font-medium text-destructive">Unable to Read Documents</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   GPT-4 Vision couldn't extract information from your documents. Common issues:
                 </p>
-                <ul className="text-sm text-muted-foreground mt-2 space-y-1 list-disc list-inside">
+                <ul className="text-xs text-muted-foreground mt-1 space-y-0.5 list-disc list-inside">
                   <li>Image is too blurry or low resolution</li>
                   <li>Poor lighting or glare on document</li>
                   <li>Text is obscured or cut off</li>
                   <li>Wrong document type (need passport biodata page)</li>
                 </ul>
-                <p className="text-sm font-medium text-foreground mt-3">
+                <p className="text-xs font-medium text-foreground mt-1.5">
                   ✏️ You can manually enter your information below, or go back and upload clearer images.
                 </p>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-xs text-muted-foreground mt-1">
                   💡 Tip: Check browser console (F12) for detailed error logs
                 </p>
               </div>
