@@ -127,42 +127,36 @@ export default function Payment({ requirements, extractedData, onPaymentComplete
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="flex gap-3 justify-center">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={() => setSelectedPlan('oneway')}
+          className="w-40"
         >
-          <Card className={`p-6 cursor-pointer transition-all hover:shadow-lg ${
+          <Card className={`p-3 cursor-pointer transition-all hover:shadow-lg ${
             selectedPlan === 'oneway' 
               ? 'border-primary border-2 shadow-md' 
               : 'border-border hover:border-primary/50'
           }`}>
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <h3 className="text-xl font-semibold">One-Way</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Essential travel assistance
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold">$5</div>
-                </div>
+            <div className="space-y-2 text-center">
+              <div className="space-y-0.5">
+                <h3 className="text-base font-semibold">One-Way</h3>
+                <div className="text-2xl font-bold">$5</div>
               </div>
               
-              <div className="pt-2">
-                <ul className="space-y-2">
+              <div className="pt-1 border-t">
+                <ul className="space-y-1 text-left">
                   {oneWayFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-2">
+                    <li key={index} className="flex items-start gap-1.5">
                       <CheckCircle 
-                        size={18} 
+                        size={14} 
                         className={`flex-shrink-0 mt-0.5 ${
                           selectedPlan === 'oneway' ? 'text-primary' : 'text-muted-foreground'
                         }`}
                         weight="fill" 
                       />
-                      <span className="text-sm">{feature}</span>
+                      <span className="text-xs leading-tight">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -175,38 +169,32 @@ export default function Payment({ requirements, extractedData, onPaymentComplete
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={() => setSelectedPlan('roundtrip')}
+          className="w-40"
         >
-          <Card className={`p-6 cursor-pointer transition-all hover:shadow-lg ${
+          <Card className={`p-3 cursor-pointer transition-all hover:shadow-lg ${
             selectedPlan === 'roundtrip' 
               ? 'border-primary border-2 shadow-md' 
               : 'border-border hover:border-primary/50'
           }`}>
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <h3 className="text-xl font-semibold">Round-Trip</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Complete journey assistance
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold">$8</div>
-                  <div className="text-xs text-success font-medium">Best Value</div>
-                </div>
+            <div className="space-y-2 text-center">
+              <div className="space-y-0.5">
+                <h3 className="text-base font-semibold">Round-Trip</h3>
+                <div className="text-2xl font-bold">$8</div>
+                <div className="text-[10px] text-success font-medium">Best Value</div>
               </div>
               
-              <div className="pt-2">
-                <ul className="space-y-2">
+              <div className="pt-1 border-t">
+                <ul className="space-y-1 text-left">
                   {roundTripFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-2">
+                    <li key={index} className="flex items-start gap-1.5">
                       <CheckCircle 
-                        size={18} 
+                        size={14} 
                         className={`flex-shrink-0 mt-0.5 ${
                           selectedPlan === 'roundtrip' ? 'text-primary' : 'text-muted-foreground'
                         }`}
                         weight="fill" 
                       />
-                      <span className="text-sm">{feature}</span>
+                      <span className="text-xs leading-tight">{feature}</span>
                     </li>
                   ))}
                 </ul>
