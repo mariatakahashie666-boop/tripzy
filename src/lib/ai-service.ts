@@ -47,47 +47,47 @@ Image: ${passportDataUrl}
 CRITICAL EXTRACTION RULES:
 
 1. **MRZ (Machine Readable Zone)** - Two lines at bottom of passport:
-   - Line 1: P<COUNTRY<<SURNAME<<GIVEN_NAMES<<<<<<
-   - Line 2: PASSPORT_NUM<NATIONALITY<BIRTH_DATE<SEX<EXPIRY_DATE
-   - Example: P<PHL<DELA<CRUZ<<JUAN<PEDRO<<<<<<<<<<<
-             AB1234567<PHL<900515<M<301231<<<<<<<<<
+- Line 1: P<COUNTRY<<SURNAME<<GIVEN_NAMES<<<<<<
+- Line 2: PASSPORT_NUM<NATIONALITY<BIRTH_DATE<SEX<EXPIRY_DATE
+- Example: P<PHL<DELA<CRUZ<<JUAN<PEDRO<<<<<<<<<<<
+         AB1234567<PHL<900515<M<301231<<<<<<<<<
 
 2. **Name Extraction**:
-   - MRZ uses << to separate surname from given names
-   - < represents spaces in names
-   - Extract EXACTLY as shown, preserve case
-   - Example: "DELA<CRUZ<<JUAN<PEDRO" → lastName: "DELA CRUZ", firstName: "JUAN PEDRO"
+- MRZ uses << to separate surname from given names
+- < represents spaces in names
+- Extract EXACTLY as shown, preserve case
+- Example: "DELA<CRUZ<<JUAN<PEDRO" → lastName: "DELA CRUZ", firstName: "JUAN PEDRO"
 
 3. **Date Conversion**:
-   - MRZ dates are YYMMDD format
-   - 00-30 = 2000-2030, 31-99 = 1931-1999
-   - Convert to YYYY-MM-DD
-   - Example: "900515" → "1990-05-15", "251225" → "2025-12-25"
+- MRZ dates are YYMMDD format
+- 00-30 = 2000-2030, 31-99 = 1931-1999
+- Convert to YYYY-MM-DD
+- Example: "900515" → "1990-05-15", "251225" → "2025-12-25"
 
 4. **Passport Number**:
-   - Found at top right AND in MRZ second line
-   - Extract full alphanumeric code
-   - Example: "P1234567", "AB9876543"
+- Found at top right AND in MRZ second line
+- Extract full alphanumeric code
+- Example: "P1234567", "AB9876543"
 
 5. **Nationality**:
-   - MRZ shows 3-letter code (PHL, THA, USA, etc.)
-   - Convert to full country name in English
-   - PHL → Philippines, THA → Thailand, USA → United States, SGP → Singapore
+- MRZ shows 3-letter code (PHL, THA, USA, etc.)
+- Convert to full country name in English
+- PHL → Philippines, THA → Thailand, USA → United States, SGP → Singapore
 
 6. **Verification**:
-   - Cross-reference MRZ data with human-readable fields at top
-   - Use the clearest, most complete data
+- Cross-reference MRZ data with human-readable fields at top
+- Use the clearest, most complete data
 
 RETURN FORMAT - Valid JSON only, no markdown:
 {
-  "data": {
-    "firstName": "EXACT GIVEN NAME(S)",
-    "lastName": "EXACT SURNAME",
-    "passportNumber": "FULL NUMBER",
-    "dateOfBirth": "YYYY-MM-DD",
-    "nationality": "Full Country Name",
-    "passportExpiry": "YYYY-MM-DD"
-  }
+"data": {
+"firstName": "EXACT GIVEN NAME(S)",
+"lastName": "EXACT SURNAME",
+"passportNumber": "FULL NUMBER",
+"dateOfBirth": "YYYY-MM-DD",
+"nationality": "Full Country Name",
+"passportExpiry": "YYYY-MM-DD"
+}
 }
 
 IMPORTANT: 
