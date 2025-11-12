@@ -277,7 +277,7 @@ export const analyzeRequirements = async (
   console.log('🔍 Analyzing requirements for:', { origin, destination, nationality })
   
   // @ts-ignore - TypeScript has issues with template literals in certain contexts
-  const prompt = window.spark.llmPrompt`You are a travel document requirements expert. Analyze the following trip details and provide ALL required documents.
+  const prompt = window.spark.llmPrompt`You are a travel document requirements expert with access to current immigration regulations. Analyze the trip details and provide ALL required documents.
 
 TRIP DETAILS:
 - Origin: ${origin}
@@ -285,44 +285,72 @@ TRIP DETAILS:
 - Nationality: ${nationality}
 
 CRITICAL INSTRUCTIONS:
-1. Research ACTUAL current requirements for this specific route
-2. Categorize each document into:
-   - "exit": Documents required by the ORIGIN country to LEAVE
-   - "entry": Documents required by the DESTINATION country to ENTER
-   - "physical": Physical documents that must be carried (passport, tickets, vaccination cards)
-   - "optional": Recommended but not mandatory (tourist attractions, transportation apps, insurance)
+1. **Research ACTUAL current requirements** - Don't make assumptions, use real immigration requirements
+2. Categorize each document:
+   - "exit": Documents required by ORIGIN country to LEAVE (departure forms, exit permits)
+   - "entry": Documents required by DESTINATION country to ENTER (arrival cards, visas, entry permits)
+   - "physical": Physical documents that MUST be carried (passport, vaccination cards, tickets)
+   - "optional": Recommended but NOT mandatory (travel insurance, tourist bookings)
 
 3. For each document specify:
-   - deliveryType: "online" (can be filled online) or "physical" (must physically carry)
-   - country: Which country requires it (use full name)
-   - officialUrl: The OFFICIAL government website URL (use .gov domains only, verified sources)
-   - verifiedSource: Name of the official source
-   - tips: Helpful advice (when to submit, what to prepare, time limits, etc.)
+   - deliveryType: "online" (can be submitted online/digital) OR "physical" (must physically carry)
+   - country: Which country requires it
+   - officialUrl: OFFICIAL government website URL (.gov/.gov.sg/.go.th domains)
+   - verifiedSource: Official source name
+   - tips: When to submit, processing time, exemptions
 
-EXAMPLE FORMAT:
+KNOWN REQUIREMENTS (USE THESE AS REFERENCE):
+
+SINGAPORE ENTRY:
+- Singapore Arrival Card (SG Arrival Card) - REQUIRED for ALL visitors
+  - Category: "entry"
+  - DeliveryType: "online"
+  - Submit up to 3 days before arrival
+  - URL: https://eservices.ica.gov.sg/sgarrivalcard
+  - Source: Immigration & Checkpoints Authority (ICA)
+
+PHILIPPINES EXIT:
+- eTravel Registration - REQUIRED for ALL departing passengers
+  - Category: "exit"
+  - DeliveryType: "online"
+  - Submit within 72 hours before departure
+  - URL: https://etravel.gov.ph
+  - Source: Bureau of Immigration
+
+THAILAND ENTRY:
+- Thailand Arrival Card (TM.6) - REQUIRED
+  - Category: "entry"
+  - DeliveryType: "physical"
+  - Given on plane or at airport
+  - URL: https://www.immigration.go.th
+
+VISA REQUIREMENTS:
+- Check if nationality requires visa for destination
+- If visa-free, mention duration allowed
+- If visa required, specify type and application process
+
+RETURN FORMAT (JSON only, no markdown):
 {
   "requirements": [
     {
-      "id": "unique-id",
-      "category": "exit",
-      "name": "Departure Card",
-      "description": "Required online registration before leaving Philippines",
+      "id": "sg-arrival-card",
+      "category": "entry",
+      "name": "Singapore Arrival Card",
+      "description": "Mandatory online arrival declaration for all visitors entering Singapore",
       "deliveryType": "online",
-      "country": "Philippines",
-      "officialUrl": "https://etravel.gov.ph",
-      "verifiedSource": "Philippine Bureau of Immigration",
-      "tips": "Submit within 72 hours before departure. Everyone is required to submit, no exemptions."
+      "country": "Singapore",
+      "officialUrl": "https://eservices.ica.gov.sg/sgarrivalcard",
+      "verifiedSource": "Immigration & Checkpoints Authority (ICA)",
+      "tips": "Submit up to 3 days before arrival. Save the QR code to show at immigration."
     }
   ]
 }
 
-IMPORTANT NOTES:
-- For Singapore: They have strict entry requirements, online arrival card system
-- For Thailand: Arrival card TM.6 required
-- For Philippines departure: eTravel required
-- Include visa requirements if applicable
-- Include vaccination requirements if applicable
-- For optional items: Include tourist attractions with booking discounts, local transport apps (Grab, Uber equivalents), eSIM recommendations
+IMPORTANT:
+- If destination is Singapore, Thailand, etc., MUST include their specific entry requirements
+- deliveryType "online" means it can be submitted digitally (NOT just carrying digital copy)
+- Physical documents that travelers already have (passport, tickets) should be category "physical"
+- Don't confuse "optional tourist services" with "required entry documents"
 
 Return ONLY valid JSON with the "requirements" array.`
 
@@ -376,32 +404,18 @@ const getFallbackRequirements = (origin: string, destination: string): TripRequi
   }
   
   if (isSingapore) {
-    requirements.push(
-      {
-        id: 'sg-arrival-card',
-        category: 'entry',
-        name: 'Singapore Arrival Card',
-        description: 'Electronic arrival card required before entry. Submit up to 3 days before arrival.',
-        deliveryType: 'online',
-        country: 'Singapore',
-        officialUrl: 'https://eservices.ica.gov.sg/sgarrivalcard',
-        verifiedSource: 'Singapore Immigration & Checkpoints Authority',
-        tips: 'Can submit earlier but not more than 3 days. Better to submit upon arrival. Save QR code to show officers.',
-        userHas: false
-      },
-      {
-        id: 'sg-visa',
-        category: 'entry',
-        name: 'Visa-Free Entry / VFTF',
-        description: 'Visa-required travelers can use Visa-Free Transit Facility for stays less than 96 hours if eligible',
-        deliveryType: 'online',
-        country: 'Singapore',
-        officialUrl: 'https://www.ica.gov.sg/enter-transit-depart/entering-singapore',
-        verifiedSource: 'Singapore ICA',
-        tips: 'Check if your nationality requires a visa. Most ASEAN citizens get 30-90 days visa-free.',
-        userHas: false
-      }
-    )
+    requirements.push({
+      id: 'sg-arrival-card',
+      category: 'entry',
+      name: 'Singapore Arrival Card (SG Arrival Card)',
+      description: 'Mandatory electronic arrival card required for ALL visitors entering Singapore. Must be submitted online.',
+      deliveryType: 'online',
+      country: 'Singapore',
+      officialUrl: 'https://eservices.ica.gov.sg/sgarrivalcard',
+      verifiedSource: 'Immigration & Checkpoints Authority (ICA)',
+      tips: 'Submit up to 3 days before arrival. Save the QR code confirmation to show at immigration. Required for all nationalities.',
+      userHas: false
+    })
   }
   
   if (isThailand) {
