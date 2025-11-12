@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CloudArrowUp, File, X, Eye, Warning, CheckCircle, Pencil } from '@phosphor-icons/react'
+import { CloudArrowUp, File, X, Eye, Warning, CheckCircle, Pencil, Camera } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { ExtractedData } from '@/types'
@@ -170,26 +170,31 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-bold">Upload Your Documents</h2>
         <p className="text-muted-foreground">
-          We need your passport and flight ticket to get started
+          Scan with camera or upload images of your passport and flight ticket
+        </p>
+        <p className="text-xs text-muted-foreground">
+          📱 Mobile users: Camera will open automatically • 💻 Desktop: Choose files from computer
         </p>
       </div>
 
-      <Card className="p-4 bg-accent/10 border-accent mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Pencil size={20} className="text-accent" weight="duotone" />
+      <Card className="p-6 bg-muted/30 border-2">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-accent/20 rounded-full">
+              <Pencil size={24} className="text-accent" weight="duotone" />
+            </div>
             <div>
-              <p className="font-medium text-sm">Having trouble scanning?</p>
-              <p className="text-xs text-muted-foreground">Type your details manually instead</p>
+              <p className="font-semibold">Can't scan documents?</p>
+              <p className="text-sm text-muted-foreground">Type your passport and flight details manually instead</p>
             </div>
           </div>
           <Button 
-            variant="outline" 
-            size="sm"
+            variant="default" 
+            size="lg"
             onClick={handleManualEntry}
-            className="shrink-0"
+            className="shrink-0 min-w-[200px]"
           >
-            <Pencil className="mr-2" size={16} />
+            <Pencil className="mr-2" size={18} />
             Type Details Manually
           </Button>
         </div>
@@ -208,12 +213,13 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              Main page with your photo and details
+              Scan photo page with your camera or upload image
             </p>
             <input
               type="file"
               id="passport-upload"
               accept="image/*"
+              capture="environment"
               className="hidden"
               onChange={(e) => handleFileChange(e, 'passport')}
             />
@@ -222,8 +228,8 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
               className="w-full"
               onClick={() => document.getElementById('passport-upload')?.click()}
             >
-              <File className="mr-2" size={20} />
-              {passportUploaded ? 'Change Passport' : 'Upload Passport'}
+              <Camera className="mr-2" size={20} />
+              {passportUploaded ? 'Change Passport' : 'Scan/Upload Passport'}
             </Button>
           </div>
         </Card>
@@ -240,12 +246,13 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              Booking confirmation or e-ticket
+              Scan or upload booking confirmation / e-ticket
             </p>
             <input
               type="file"
               id="ticket-upload"
               accept="image/*,application/pdf"
+              capture="environment"
               className="hidden"
               onChange={(e) => handleFileChange(e, 'ticket')}
             />
@@ -254,8 +261,8 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
               className="w-full"
               onClick={() => document.getElementById('ticket-upload')?.click()}
             >
-              <File className="mr-2" size={20} />
-              {ticketUploaded ? 'Change Ticket' : 'Upload Ticket'}
+              <Camera className="mr-2" size={20} />
+              {ticketUploaded ? 'Change Ticket' : 'Scan/Upload Ticket'}
             </Button>
           </div>
         </Card>
@@ -275,7 +282,7 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
         <div className="text-center space-y-4">
           <CloudArrowUp className="mx-auto text-muted-foreground" size={48} weight="duotone" />
           <div>
-            <p className="font-medium">Optional: Add More Documents</p>
+            <p className="font-medium">Optional: Scan or Upload More Documents</p>
             <p className="text-sm text-muted-foreground mt-1">
               Hotel booking, bank statement, etc. (up to 3 more)
             </p>
@@ -284,6 +291,7 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
             type="file"
             id="additional-upload"
             accept="image/*,application/pdf"
+            capture="environment"
             multiple
             className="hidden"
             onChange={(e) => handleFileChange(e, 'additional')}
@@ -359,7 +367,7 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>Verify Document Clarity</DialogTitle>
+            <DialogTitle>📸 Verify Document Quality</DialogTitle>
           </DialogHeader>
           
           <div className="flex-1 overflow-auto">
@@ -373,29 +381,36 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
                   />
                 </div>
 
-                <Card className="p-2 bg-accent/10 border-accent">
+                <Card className="p-3 bg-accent/10 border-accent">
                   <div className="flex items-start gap-2">
-                    <Warning size={16} className="text-accent shrink-0 mt-0.5" weight="fill" />
-                    <div className="space-y-1 text-xs">
-                      <p className="font-semibold">Please verify your document is:</p>
-                      <ul className="space-y-0.5 text-muted-foreground">
+                    <Warning size={18} className="text-accent shrink-0 mt-0.5" weight="fill" />
+                    <div className="space-y-1 text-sm">
+                      <p className="font-semibold">Make sure your document has:</p>
+                      <ul className="space-y-1 text-xs text-muted-foreground">
                         <li>✓ All text is clear and readable</li>
-                        <li>✓ No blur or glare</li>
-                        <li>✓ All corners visible</li>
+                        <li>✓ No blur or glare from lighting</li>
+                        <li>✓ All four corners are visible</li>
                         <li>✓ No fingers or objects covering text</li>
-                        <li>✓ Good lighting without shadows</li>
+                        <li>✓ Good lighting without dark shadows</li>
+                        <li>✓ Document is flat, not folded or curved</li>
                       </ul>
                     </div>
                   </div>
                 </Card>
 
-                <Card className="p-2 bg-muted/50">
+                <Card className="p-3 bg-success/10 border-success">
                   <div className="flex items-start gap-2">
-                    <CheckCircle size={16} className="text-success shrink-0 mt-0.5" weight="fill" />
-                    <div className="space-y-0.5 text-xs">
-                      <p className="font-medium">Clear documents = Better accuracy</p>
+                    <CheckCircle size={18} className="text-success shrink-0 mt-0.5" weight="fill" />
+                    <div className="space-y-1 text-xs">
+                      <p className="font-medium">📷 Camera Tips for Best Results:</p>
                       <p className="text-muted-foreground">
-                        High quality photos help us extract your information with 99% accuracy
+                        • Hold phone directly above document (not at an angle)
+                        <br />
+                        • Use natural daylight or bright indoor lighting
+                        <br />
+                        • Avoid shadows from your hands
+                        <br />
+                        • Clear photos = 99% accurate data extraction
                       </p>
                     </div>
                   </div>
@@ -406,9 +421,11 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
 
           <DialogFooter className="flex gap-2">
             <Button variant="outline" onClick={cancelPreview}>
+              <Camera className="mr-2" size={16} />
               Retake Photo
             </Button>
             <Button onClick={confirmPreview}>
+              <CheckCircle className="mr-2" size={16} weight="fill" />
               Looks Good, Upload
             </Button>
           </DialogFooter>
