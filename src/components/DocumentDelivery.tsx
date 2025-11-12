@@ -13,9 +13,10 @@ import { useKV } from '@github/spark/hooks'
 interface DocumentDeliveryProps {
   extractedData: ExtractedData
   requirements: TripRequirement[]
+  hasPaid: boolean
 }
 
-export default function DocumentDelivery({ extractedData, requirements }: DocumentDeliveryProps) {
+export default function DocumentDelivery({ extractedData, requirements, hasPaid }: DocumentDeliveryProps) {
   const [documents, setDocuments] = useState<TravelDocument[]>([])
   const [isGenerating, setIsGenerating] = useState(true)
   const [completedDocs, setCompletedDocs] = useState<Set<string>>(new Set())
@@ -229,24 +230,39 @@ export default function DocumentDelivery({ extractedData, requirements }: Docume
                     Download PDF
                   </Button>
                   
-                  <Button
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => window.open(doc.officialUrl, '_blank')}
-                  >
-                    <ArrowSquareOut size={18} />
-                    Open Official Site
-                  </Button>
+                  {hasPaid ? (
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => window.open(doc.officialUrl, '_blank')}
+                    >
+                      <ArrowSquareOut size={18} />
+                      Open Official Site
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      disabled
+                    >
+                      <ArrowSquareOut size={18} />
+                      Payment Required
+                    </Button>
+                  )}
                 </div>
 
-                <div className="ml-9 flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle size={16} className="text-success" />
-                  <span>Verified: {doc.officialUrl}</span>
-                </div>
-                
-                <div className="ml-9 text-xs text-muted-foreground">
-                  Last verified: {new Date(doc.lastVerified).toLocaleDateString()}
-                </div>
+                {hasPaid && (
+                  <>
+                    <div className="ml-9 flex items-center gap-2 text-sm text-muted-foreground">
+                      <CheckCircle size={16} className="text-success" />
+                      <span>Verified: {doc.officialUrl}</span>
+                    </div>
+                    
+                    <div className="ml-9 text-xs text-muted-foreground">
+                      Last verified: {new Date(doc.lastVerified).toLocaleDateString()}
+                    </div>
+                  </>
+                )}
               </div>
             </Card>
           </motion.div>

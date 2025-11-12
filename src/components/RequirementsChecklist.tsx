@@ -367,16 +367,10 @@ function RequirementCard({ req, index, onToggle, optional }: RequirementCardProp
               </p>
             )}
             {req.officialUrl && (
-              <a
-                href={req.officialUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-primary hover:underline flex items-center gap-1 mt-1.5"
-              >
-                <ArrowSquareOut size={12} />
-                {req.verifiedSource || 'Official Link'}
-                {req.verifiedSource && <ShieldCheck size={12} className="text-success" />}
-              </a>
+              <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1.5">
+                <ShieldCheck size={12} className="text-success" />
+                {req.verifiedSource ? `Verified by ${req.verifiedSource}` : 'Verified official source'}
+              </div>
             )}
           </div>
         </div>

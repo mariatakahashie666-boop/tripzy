@@ -27,6 +27,7 @@ function App() {
   const [requirements, setRequirements] = useState<TripRequirement[]>([])
   const [showNoOnlineDocsScreen, setShowNoOnlineDocsScreen] = useState(false)
   const [isOptionalServiceOnly, setIsOptionalServiceOnly] = useState(false)
+  const [hasPaid, setHasPaid] = useState(false)
 
   const handleStart = () => {
     setCurrentStep(1)
@@ -51,8 +52,7 @@ function App() {
     
     const onlineDocsNeeded = reqs.filter(r => 
       (r.category === 'exit' || r.category === 'entry') && 
-      r.deliveryType === 'online' && 
-      !r.userHas
+      r.deliveryType === 'online'
     )
     
     const hasOnlineDocs = onlineDocsNeeded.length > 0
@@ -66,11 +66,13 @@ function App() {
       setIsOptionalServiceOnly(true)
       setShowNoOnlineDocsScreen(false)
     } else {
+      setHasPaid(true)
       setCurrentStep(5)
     }
   }
 
   const handlePaymentComplete = (plan: 'standard' | 'premium') => {
+    setHasPaid(true)
     setCurrentStep(5)
   }
 
@@ -110,7 +112,7 @@ function App() {
               />
             )}
             {currentStep === 5 && extractedData && requirements.length > 0 && (
-              <DocumentDelivery extractedData={extractedData} requirements={requirements} />
+              <DocumentDelivery extractedData={extractedData} requirements={requirements} hasPaid={hasPaid} />
             )}
           </div>
         </>
