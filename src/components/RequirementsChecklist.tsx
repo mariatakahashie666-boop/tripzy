@@ -9,6 +9,7 @@ import { analyzeRequirements } from '@/lib/ai-service'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { AFFILIATE_PARTNERS } from '@/lib/constants'
 import { Badge } from '@/components/ui/badge'
+import PartnerLogo from '@/components/PartnerLogo'
 
 interface RequirementsChecklistProps {
   extractedData: ExtractedData
@@ -240,7 +241,9 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
                     className="h-8 text-xs justify-start px-2"
                     onClick={() => window.open(partner.url, '_blank')}
                   >
-                    <span className="mr-1 text-sm">{partner.logo}</span>
+                    <span className="mr-1.5 flex-shrink-0">
+                      <PartnerLogo logo={partner.logo} className="w-4 h-4" />
+                    </span>
                     <span className="truncate">{partner.name}</span>
                   </Button>
                 ))}
@@ -258,7 +261,9 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
                     className="h-8 text-xs justify-start px-2"
                     onClick={() => window.open(partner.url, '_blank')}
                   >
-                    <span className="mr-1 text-sm">{partner.logo}</span>
+                    <span className="mr-1.5 flex-shrink-0">
+                      <PartnerLogo logo={partner.logo} className="w-4 h-4" />
+                    </span>
                     <span className="truncate">{partner.name}</span>
                   </Button>
                 ))}
@@ -276,7 +281,9 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
                     className="h-8 text-xs justify-start px-2"
                     onClick={() => window.open(partner.url, '_blank')}
                   >
-                    <span className="mr-1 text-sm">{partner.logo}</span>
+                    <span className="mr-1.5 flex-shrink-0">
+                      <PartnerLogo logo={partner.logo} className="w-4 h-4" />
+                    </span>
                     <span className="truncate">{partner.name}</span>
                   </Button>
                 ))}
@@ -294,7 +301,9 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
                     className="h-8 text-xs justify-start px-2"
                     onClick={() => window.open(partner.url, '_blank')}
                   >
-                    <span className="mr-1 text-sm">{partner.logo}</span>
+                    <span className="mr-1.5 flex-shrink-0">
+                      <PartnerLogo logo={partner.logo} className="w-4 h-4" />
+                    </span>
                     <span className="truncate">{partner.name}</span>
                   </Button>
                 ))}

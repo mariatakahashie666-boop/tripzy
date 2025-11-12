@@ -7,7 +7,7 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     category: 'tours',
     commission: 10,
     url: 'https://www.klook.com',
-    logo: '🎫'
+    logo: 'klook'
   },
   {
     id: 'booking',
@@ -15,7 +15,7 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     category: 'hotel',
     commission: 5,
     url: 'https://www.booking.com',
-    logo: '🏨'
+    logo: 'booking'
   },
   {
     id: 'agoda',
@@ -23,7 +23,7 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     category: 'hotel',
     commission: 5,
     url: 'https://www.agoda.com',
-    logo: '🏨'
+    logo: 'agoda'
   },
   {
     id: 'worldnomads',
@@ -31,7 +31,7 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     category: 'insurance',
     commission: 8,
     url: 'https://www.worldnomads.com',
-    logo: '🛡️'
+    logo: 'worldnomads'
   },
   {
     id: 'airalo',
@@ -39,7 +39,7 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     category: 'sim',
     commission: 10,
     url: 'https://www.airalo.com',
-    logo: '📱'
+    logo: 'airalo'
   },
   {
     id: 'getyourguide',
@@ -47,7 +47,7 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     category: 'tours',
     commission: 7,
     url: 'https://www.getyourguide.com',
-    logo: '🗺️'
+    logo: 'getyourguide'
   },
   {
     id: '12go',
@@ -55,7 +55,7 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     category: 'transport',
     commission: 6,
     url: 'https://12go.asia',
-    logo: '🚌'
+    logo: '12go'
   },
   {
     id: 'viator',
@@ -63,7 +63,7 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     category: 'tours',
     commission: 7,
     url: 'https://www.viator.com',
-    logo: '🎭'
+    logo: 'viator'
   }
 ]
 
