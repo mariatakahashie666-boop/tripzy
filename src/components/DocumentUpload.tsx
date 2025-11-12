@@ -2,9 +2,12 @@ import { useState, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { CloudArrowUp, File, X, Eye, Warning, CheckCircle } from '@phosphor-icons/react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { CloudArrowUp, File, X, Eye, Warning, CheckCircle, Pencil } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { ExtractedData } from '@/types'
 
 interface DocumentUploadProps {
   onUploadComplete: (files: File[]) => void
@@ -21,6 +24,20 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
   const [ticketUploaded, setTicketUploaded] = useState(false)
   const [previewFile, setPreviewFile] = useState<FileWithPreview | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [manualEntryOpen, setManualEntryOpen] = useState(false)
+  const [manualData, setManualData] = useState<Partial<ExtractedData>>({
+    firstName: '',
+    lastName: '',
+    passportNumber: '',
+    dateOfBirth: '',
+    nationality: '',
+    passportExpiry: '',
+    origin: '',
+    destination: '',
+    departureDate: '',
+    returnDate: '',
+    flightNumber: ''
+  })
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -116,6 +133,38 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
     }
   }
 
+  const handleManualEntry = () => {
+    setManualEntryOpen(true)
+  }
+
+  const handleManualDataChange = (field: keyof ExtractedData, value: string) => {
+    setManualData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleManualSubmit = () => {
+    try {
+      const fileData = {
+        name: 'manual-entry.txt',
+        size: 0,
+        type: 'text/plain',
+        lastModified: Date.now(),
+        manualData: { ...manualData, confidence: 100 },
+        slice: () => new Blob(),
+        stream: () => new ReadableStream(),
+        text: async () => 'manual-entry',
+        arrayBuffer: async () => new ArrayBuffer(0)
+      } as unknown as FileWithPreview & { manualData: ExtractedData }
+      
+      setFiles([fileData])
+      setPassportUploaded(true)
+      setTicketUploaded(true)
+      setManualEntryOpen(false)
+      onUploadComplete([fileData as File])
+    } catch (error) {
+      console.error('Error creating file:', error)
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
       <div className="text-center space-y-2">
@@ -124,6 +173,27 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
           We need your passport and flight ticket to get started
         </p>
       </div>
+
+      <Card className="p-4 bg-accent/10 border-accent mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Pencil size={20} className="text-accent" weight="duotone" />
+            <div>
+              <p className="font-medium text-sm">Having trouble scanning?</p>
+              <p className="text-xs text-muted-foreground">Type your details manually instead</p>
+            </div>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleManualEntry}
+            className="shrink-0"
+          >
+            <Pencil className="mr-2" size={16} />
+            Type Details Manually
+          </Button>
+        </div>
+      </Card>
 
       <div className="grid md:grid-cols-2 gap-4">
         <Card className={cn(
@@ -340,6 +410,155 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
             </Button>
             <Button onClick={confirmPreview}>
               Looks Good, Upload
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={manualEntryOpen} onOpenChange={setManualEntryOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Enter Your Travel Details Manually</DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-auto space-y-6 pr-2">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b">
+                <h3 className="font-semibold">Passport Information</h3>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    placeholder="JUAN"
+                    value={manualData.firstName}
+                    onChange={(e) => handleManualDataChange('firstName', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    placeholder="DELA CRUZ"
+                    value={manualData.lastName}
+                    onChange={(e) => handleManualDataChange('lastName', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="passportNumber">Passport Number</Label>
+                  <Input
+                    id="passportNumber"
+                    placeholder="P1234567"
+                    value={manualData.passportNumber}
+                    onChange={(e) => handleManualDataChange('passportNumber', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="nationality">Nationality</Label>
+                  <Input
+                    id="nationality"
+                    placeholder="Philippines"
+                    value={manualData.nationality}
+                    onChange={(e) => handleManualDataChange('nationality', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                  <Input
+                    id="dateOfBirth"
+                    type="date"
+                    value={manualData.dateOfBirth}
+                    onChange={(e) => handleManualDataChange('dateOfBirth', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="passportExpiry">Passport Expiry Date</Label>
+                  <Input
+                    id="passportExpiry"
+                    type="date"
+                    value={manualData.passportExpiry}
+                    onChange={(e) => handleManualDataChange('passportExpiry', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b">
+                <h3 className="font-semibold">Flight Information</h3>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="origin">Origin (From)</Label>
+                  <Input
+                    id="origin"
+                    placeholder="Manila, Philippines"
+                    value={manualData.origin}
+                    onChange={(e) => handleManualDataChange('origin', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="destination">Destination (To)</Label>
+                  <Input
+                    id="destination"
+                    placeholder="Bangkok, Thailand"
+                    value={manualData.destination}
+                    onChange={(e) => handleManualDataChange('destination', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="departureDate">Departure Date</Label>
+                  <Input
+                    id="departureDate"
+                    type="date"
+                    value={manualData.departureDate}
+                    onChange={(e) => handleManualDataChange('departureDate', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="returnDate">Return Date</Label>
+                  <Input
+                    id="returnDate"
+                    type="date"
+                    value={manualData.returnDate}
+                    onChange={(e) => handleManualDataChange('returnDate', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="flightNumber">Flight Number (Optional)</Label>
+                <Input
+                  id="flightNumber"
+                  placeholder="PR123"
+                  value={manualData.flightNumber}
+                  onChange={(e) => handleManualDataChange('flightNumber', e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setManualEntryOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleManualSubmit}
+              disabled={!manualData.firstName || !manualData.lastName || !manualData.passportNumber || !manualData.destination}
+            >
+              Continue with Manual Entry
             </Button>
           </DialogFooter>
         </DialogContent>

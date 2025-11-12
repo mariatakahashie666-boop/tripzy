@@ -25,7 +25,7 @@ export default function Hero({ onStart, onGuestMode }: HeroProps) {
   const handleGoogleSignIn = async () => {
     setIsAuthenticating(true)
     try {
-      const user = await spark.user()
+      const user = await window.spark.user()
       
       if (user && user.login) {
         toast.success(`Welcome, ${user.login}!`)

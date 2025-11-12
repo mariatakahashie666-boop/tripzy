@@ -21,6 +21,14 @@ export default function DataVerification({ files, onVerified }: DataVerification
   useEffect(() => {
     const extractData = async () => {
       setIsLoading(true)
+      
+      const firstFile = files[0] as any
+      if (firstFile?.manualData) {
+        setExtractedData(firstFile.manualData)
+        setIsLoading(false)
+        return
+      }
+      
       const data = await simulateDocumentExtraction(files)
       setExtractedData(data)
       setIsLoading(false)
