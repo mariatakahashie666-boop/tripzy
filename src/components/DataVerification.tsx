@@ -49,11 +49,16 @@ export default function DataVerification({ files, onVerified }: DataVerification
           <div className="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
           <h3 className="text-xl font-semibold">Scanning Your Documents...</h3>
           <p className="text-muted-foreground">
-            Our AI is analyzing your passport and flight ticket using GPT-4 vision to extract your real information
+            GPT-4 Vision is analyzing your passport and flight ticket to extract your real information
           </p>
-          <p className="text-sm text-muted-foreground">
-            This may take 10-30 seconds depending on image quality
-          </p>
+          <div className="text-sm text-muted-foreground space-y-1">
+            <p>📸 Reading passport MRZ and text fields...</p>
+            <p>🎫 Extracting flight details and dates...</p>
+            <p>⏱️ This usually takes 15-30 seconds</p>
+          </div>
+          <div className="text-xs text-accent/70 mt-4">
+            Check your browser console (F12) for detailed progress logs
+          </div>
         </Card>
       </div>
     )
@@ -85,15 +90,19 @@ export default function DataVerification({ files, onVerified }: DataVerification
               <div>
                 <p className="font-medium text-destructive">Unable to Read Documents</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Our AI couldn't extract information from your documents. Please ensure:
+                  GPT-4 Vision couldn't extract information from your documents. Common issues:
                 </p>
                 <ul className="text-sm text-muted-foreground mt-2 space-y-1 list-disc list-inside">
-                  <li>Images are clear and well-lit</li>
-                  <li>Text is not blurry or obscured</li>
-                  <li>The entire document is visible in the photo</li>
+                  <li>Image is too blurry or low resolution</li>
+                  <li>Poor lighting or glare on document</li>
+                  <li>Text is obscured or cut off</li>
+                  <li>Wrong document type (need passport biodata page)</li>
                 </ul>
-                <p className="text-sm text-muted-foreground mt-2">
-                  You can manually enter your information below.
+                <p className="text-sm font-medium text-foreground mt-3">
+                  ✏️ You can manually enter your information below, or go back and upload clearer images.
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  💡 Tip: Check browser console (F12) for detailed error logs
                 </p>
               </div>
             </div>
@@ -129,9 +138,28 @@ export default function DataVerification({ files, onVerified }: DataVerification
             <div className="flex items-start gap-3">
               <Warning size={24} className="text-accent flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium">Lower Confidence Scan</p>
+                <p className="font-medium">Good Scan - Please Verify</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Confidence: {extractedData.confidence}% - Please review all fields carefully
+                  Confidence: {extractedData.confidence}% - Most fields were read successfully. Please review carefully before proceeding.
+                </p>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {!noDataExtracted && !lowConfidence && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card className="p-4 bg-success/10 border-success">
+            <div className="flex items-start gap-3">
+              <CheckCircle size={24} className="text-success flex-shrink-0 mt-0.5" weight="fill" />
+              <div>
+                <p className="font-medium text-success">Excellent Scan! 🎉</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Confidence: {extractedData.confidence}% - All key information extracted successfully. Please verify the details below are correct.
                 </p>
               </div>
             </div>
