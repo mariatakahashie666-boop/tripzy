@@ -1,4 +1,4 @@
-import { ExtractedData, TripRequirement, TravelDocument } from '@/types'
+import { ExtractedData, TripRequirement, TravelDocument, FlightLeg } from '@/types'
 
 const convertFileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -272,12 +272,26 @@ CRITICAL:
 export const analyzeRequirements = async (
   origin: string,
   destination: string,
-  nationality: string
+  nationality: string,
+  transitCountries?: string[],
+  flightLegs?: FlightLeg[]
 ): Promise<TripRequirement[]> => {
   console.log('🔍 Analyzing requirements for:')
   console.log('  👤 Nationality:', nationality)
   console.log('  📍 Departing from:', origin)
   console.log('  ✈️ Going to:', destination)
+  if (transitCountries && transitCountries.length > 0) {
+    console.log('  🔄 Transit countries:', transitCountries.join(', '))
+  }
+  if (flightLegs && flightLegs.length > 0) {
+    console.log('  ✈️ Multi-leg flight with', flightLegs.length, 'legs')
+    flightLegs.forEach((leg, i) => {
+      console.log(`    Leg ${i + 1}: ${leg.from} → ${leg.to} (${leg.date})`)
+      if (leg.transitDuration) {
+        console.log(`      Layover: ${leg.transitDuration}`)
+      }
+    })
+  }
   console.log('')
   console.log('⚠️ CRITICAL CHECK: Philippines eTravel Requirements')
   const isDepartingFromPhilippines = origin.toLowerCase().includes('philippines') || origin.toLowerCase().includes('manila')
@@ -288,12 +302,17 @@ export const analyzeRequirements = async (
   console.log('')
   
   // @ts-ignore - TypeScript has issues with template literals in certain contexts
-  const prompt = window.spark.llmPrompt`You are a travel document requirements expert with access to current immigration regulations. Analyze the trip details and provide ALL required documents.
+  const prompt = window.spark.llmPrompt`You are a travel document requirements expert with access to current immigration regulations. Analyze the trip details and provide ALL required documents including transit country requirements.
 
 TRIP DETAILS:
 - Traveler Nationality: ${nationality}
 - Current Location (Departure): ${origin}
 - Destination: ${destination}
+${transitCountries && transitCountries.length > 0 ? `- Transit Countries: ${transitCountries.join(', ')}` : ''}
+${flightLegs && flightLegs.length > 0 ? `
+- Multi-Leg Flight:
+${flightLegs.map((leg, i) => `  Leg ${i + 1}: ${leg.from} → ${leg.to} on ${leg.date}${leg.transitDuration ? ` (Layover: ${leg.transitDuration})` : ''}`).join('\n')}
+` : ''}
 
 CRITICAL INSTRUCTIONS:
 1. **Research ACTUAL current requirements** - Don't make assumptions, use real immigration requirements
@@ -302,18 +321,28 @@ CRITICAL INSTRUCTIONS:
    - Where is the traveler CURRENTLY (departure country)?
    - Where is the traveler GOING (destination country)?
 
-3. Categorize each document:
+3. **TRANSIT VISA REQUIREMENTS** (if transit countries are present):
+   - For each transit country, determine if a transit visa is required
+   - Consider layover duration (short layovers <24h may not require visa if staying airside)
+   - Check nationality-specific transit visa exemptions
+   - Add category "transit" for transit-specific documents
+   - Mark isTransitRequirement: true for transit documents
+   - Include transitDuration in description if relevant
+
+4. Categorize each document:
    - "exit": Documents required by ORIGIN country to LEAVE (departure forms, exit permits)
    - "entry": Documents required by DESTINATION country to ENTER (arrival cards, visas, entry permits)
+   - "transit": Documents required for TRANSIT through connecting countries (transit visas, airside permits)
    - "physical": Physical documents that MUST be carried (passport, vaccination cards, tickets)
    - "optional": Recommended but NOT mandatory (travel insurance, tourist bookings)
 
-4. For each document specify:
+5. For each document specify:
    - deliveryType: "online" (can be submitted online/digital) OR "physical" (must physically carry)
    - country: Which country requires it
    - officialUrl: OFFICIAL government website URL (.gov/.gov.sg/.go.th domains)
    - verifiedSource: Official source name
    - tips: When to submit, processing time, exemptions
+   - isTransitRequirement: true if it's for a transit country (optional field)
 
 KNOWN REQUIREMENTS (USE THESE AS REFERENCE):
 
@@ -344,6 +373,11 @@ SINGAPORE ENTRY:
   - URL: https://eservices.ica.gov.sg/sgarrivalcard
   - Source: Immigration & Checkpoints Authority (ICA)
   - Applies to ALL nationalities entering Singapore
+
+SINGAPORE TRANSIT:
+- Many nationalities can transit Singapore airside without visa if staying <24 hours
+- Check Transit Without Visa (TWOV) facility eligibility
+- Some nationalities require transit visa even for short layovers
 
 THAILAND ENTRY:
 - Thailand Arrival Card (TM.6) - REQUIRED for ALL visitors

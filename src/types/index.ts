@@ -1,7 +1,7 @@
 export interface TravelDocument {
   id: string
   name: string
-  type: 'exit' | 'entry' | 'physical' | 'optional'
+  type: 'exit' | 'entry' | 'physical' | 'optional' | 'transit'
   completed: boolean
   confidence: number
   missingFields: string[]
@@ -12,6 +12,16 @@ export interface TravelDocument {
   country?: string
   verifiedSource?: string
   tips?: string
+  isTransitDocument?: boolean
+}
+
+export interface FlightLeg {
+  from: string
+  to: string
+  date: string
+  flightNumber: string
+  isTransit: boolean
+  transitDuration?: string
 }
 
 export interface ExtractedData {
@@ -29,11 +39,14 @@ export interface ExtractedData {
   hotelName?: string
   hotelAddress?: string
   confidence: number
+  transitCountries?: string[]
+  flightLegs?: FlightLeg[]
+  isMultiLeg?: boolean
 }
 
 export interface TripRequirement {
   id: string
-  category: 'exit' | 'entry' | 'physical' | 'optional'
+  category: 'exit' | 'entry' | 'physical' | 'optional' | 'transit'
   name: string
   description: string
   userHas: boolean
@@ -44,6 +57,8 @@ export interface TripRequirement {
   tips?: string
   price?: number
   highlight?: boolean
+  isTransitRequirement?: boolean
+  transitDuration?: string
 }
 
 export interface Trip {

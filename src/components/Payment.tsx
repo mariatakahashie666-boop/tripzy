@@ -105,8 +105,11 @@ export default function Payment({ requirements, extractedData, onPaymentComplete
     .filter(req => req.category === 'optional' && req.userHas && req.price)
     .reduce((sum, req) => sum + (req.price || 0), 0)
 
+  const transitCountriesCount = extractedData?.transitCountries?.length || 0
+  const transitSurcharge = transitCountriesCount * 2
+  
   const basePlanPrice = optionalServiceOnly ? 0 : (selectedPlan === 'oneway' ? 5 : 8)
-  const planPrice = basePlanPrice + optionalItemsPrice
+  const planPrice = basePlanPrice + optionalItemsPrice + transitSurcharge
   const isRoundTrip = selectedPlan === 'roundtrip'
   
   const oneWayFeatures = [
@@ -295,6 +298,16 @@ export default function Payment({ requirements, extractedData, onPaymentComplete
           </div>
         )}
         
+        {transitSurcharge > 0 && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground flex items-center gap-1">
+              <span className="text-xs">🔄</span>
+              Transit Countries ({transitCountriesCount})
+            </span>
+            <span className="font-semibold text-accent">+${transitSurcharge}</span>
+          </div>
+        )}
+        
         {optionalItemsPrice > 0 && (
           <>
             {requirements
@@ -309,7 +322,7 @@ export default function Payment({ requirements, extractedData, onPaymentComplete
                 </div>
               ))
             }
-            {!optionalServiceOnly && basePlanPrice > 0 && (
+            {(!optionalServiceOnly && basePlanPrice > 0) || transitSurcharge > 0 && (
               <div className="border-t pt-2" />
             )}
           </>

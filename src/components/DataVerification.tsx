@@ -3,8 +3,8 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ExtractedData } from '@/types'
-import { Warning, CheckCircle, PencilSimple, DeviceMobile, Desktop } from '@phosphor-icons/react'
+import { ExtractedData, FlightLeg } from '@/types'
+import { Warning, CheckCircle, PencilSimple, DeviceMobile, Desktop, Plus, X, Airplane } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import { simulateDocumentExtraction } from '@/lib/ai-service'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -19,6 +19,8 @@ export default function DataVerification({ files, onVerified }: DataVerification
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [editedData, setEditedData] = useState<Partial<ExtractedData>>({})
+  const [flightLegs, setFlightLegs] = useState<FlightLeg[]>([])
+  const [showMultiLeg, setShowMultiLeg] = useState(false)
 
   useEffect(() => {
     const extractData = async () => {
@@ -27,12 +29,20 @@ export default function DataVerification({ files, onVerified }: DataVerification
       const firstFile = files[0] as any
       if (firstFile?.manualData) {
         setExtractedData(firstFile.manualData)
+        if (firstFile.manualData.flightLegs && firstFile.manualData.flightLegs.length > 0) {
+          setFlightLegs(firstFile.manualData.flightLegs)
+          setShowMultiLeg(true)
+        }
         setIsLoading(false)
         return
       }
       
       const data = await simulateDocumentExtraction(files)
       setExtractedData(data)
+      if (data.flightLegs && data.flightLegs.length > 0) {
+        setFlightLegs(data.flightLegs)
+        setShowMultiLeg(true)
+      }
       setIsLoading(false)
     }
     extractData()
@@ -46,9 +56,42 @@ export default function DataVerification({ files, onVerified }: DataVerification
     return (editedData[field] as string) ?? (extractedData?.[field] as string) ?? ''
   }
 
+  const addFlightLeg = () => {
+    const newLeg: FlightLeg = {
+      from: '',
+      to: '',
+      date: '',
+      flightNumber: '',
+      isTransit: true,
+      transitDuration: ''
+    }
+    setFlightLegs([...flightLegs, newLeg])
+  }
+
+  const removeFlightLeg = (index: number) => {
+    setFlightLegs(flightLegs.filter((_, i) => i !== index))
+  }
+
+  const updateFlightLeg = (index: number, field: keyof FlightLeg, value: string | boolean) => {
+    const updated = [...flightLegs]
+    updated[index] = { ...updated[index], [field]: value }
+    setFlightLegs(updated)
+  }
+
   const handleProceed = () => {
     if (extractedData) {
-      onVerified({ ...extractedData, ...editedData })
+      const transitCountries = flightLegs
+        .filter(leg => leg.isTransit && leg.from)
+        .map(leg => leg.from)
+      
+      const finalData = { 
+        ...extractedData, 
+        ...editedData,
+        flightLegs: showMultiLeg && flightLegs.length > 0 ? flightLegs : undefined,
+        isMultiLeg: showMultiLeg && flightLegs.length > 0,
+        transitCountries: transitCountries.length > 0 ? transitCountries : undefined
+      }
+      onVerified(finalData)
     }
   }
 
@@ -308,6 +351,137 @@ export default function DataVerification({ files, onVerified }: DataVerification
                   className="font-mono"
                 />
               </div>
+            </div>
+
+            <div className="mt-6 pt-6 border-t">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Airplane size={18} className="text-accent" />
+                    Multi-Leg Flight with Transit Countries?
+                  </h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Add connecting flights that pass through other countries (layovers/transits)
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant={showMultiLeg ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setShowMultiLeg(!showMultiLeg)
+                    if (!showMultiLeg && flightLegs.length === 0) {
+                      addFlightLeg()
+                    }
+                  }}
+                >
+                  {showMultiLeg ? "Hide" : "Add Transit"}
+                </Button>
+              </div>
+
+              {showMultiLeg && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="space-y-4"
+                >
+                  <Card className="p-4 bg-accent/5 border-accent/20">
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Important:</strong> Only add flights where you'll pass through another country's airport. 
+                      We'll check transit visa requirements for each country. Short layovers may not require transit visas.
+                    </p>
+                  </Card>
+
+                  {flightLegs.map((leg, index) => (
+                    <Card key={index} className="p-4 space-y-4 bg-muted/30">
+                      <div className="flex items-center justify-between">
+                        <h5 className="font-medium text-sm flex items-center gap-2">
+                          <Airplane size={16} weight="fill" className="text-primary" />
+                          Flight Leg {index + 1}
+                        </h5>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFlightLeg(index)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <X size={16} />
+                        </Button>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label htmlFor={`leg-from-${index}`} className="text-xs">From (Transit Country)</Label>
+                          <Input
+                            id={`leg-from-${index}`}
+                            placeholder="e.g., Singapore"
+                            value={leg.from}
+                            onChange={(e) => updateFlightLeg(index, 'from', e.target.value)}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`leg-to-${index}`} className="text-xs">To</Label>
+                          <Input
+                            id={`leg-to-${index}`}
+                            placeholder="e.g., Bangkok"
+                            value={leg.to}
+                            onChange={(e) => updateFlightLeg(index, 'to', e.target.value)}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`leg-date-${index}`} className="text-xs">Date</Label>
+                          <Input
+                            id={`leg-date-${index}`}
+                            type="date"
+                            value={leg.date}
+                            onChange={(e) => updateFlightLeg(index, 'date', e.target.value)}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor={`leg-flight-${index}`} className="text-xs">Flight Number</Label>
+                          <Input
+                            id={`leg-flight-${index}`}
+                            placeholder="e.g., SQ123"
+                            value={leg.flightNumber}
+                            onChange={(e) => updateFlightLeg(index, 'flightNumber', e.target.value)}
+                            className="font-mono"
+                          />
+                        </div>
+
+                        <div className="space-y-2 md:col-span-2">
+                          <Label htmlFor={`leg-duration-${index}`} className="text-xs">
+                            Layover Duration (optional)
+                          </Label>
+                          <Input
+                            id={`leg-duration-${index}`}
+                            placeholder="e.g., 3 hours, 1 day"
+                            value={leg.transitDuration || ''}
+                            onChange={(e) => updateFlightLeg(index, 'transitDuration', e.target.value)}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            This helps determine if you need a transit visa (short layovers may not require one)
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addFlightLeg}
+                    className="w-full"
+                  >
+                    <Plus size={16} className="mr-2" />
+                    Add Another Flight Leg
+                  </Button>
+                </motion.div>
+              )}
             </div>
           </div>
         </div>

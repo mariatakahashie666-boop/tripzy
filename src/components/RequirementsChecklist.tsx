@@ -28,7 +28,9 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
       const reqs = await analyzeRequirements(
         extractedData.origin,
         extractedData.destination,
-        extractedData.nationality
+        extractedData.nationality,
+        extractedData.transitCountries,
+        extractedData.flightLegs
       )
       setRequirements(reqs)
       setIsLoading(false)
@@ -52,6 +54,7 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
     switch (category) {
       case 'exit': return '🛫'
       case 'entry': return '🛬'
+      case 'transit': return '🔄'
       case 'physical': return '📋'
       case 'optional': return '⭐'
     }
@@ -61,6 +64,7 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
     switch (category) {
       case 'exit': return 'Exit Documents (Departure Country)'
       case 'entry': return 'Entry Documents (Destination Country)'
+      case 'transit': return 'Transit Documents (Connecting Flights)'
       case 'physical': return 'Must Carry Physically'
       case 'optional': return 'Optional (Recommended)'
     }
@@ -82,19 +86,30 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
 
   const exitDocs = requirements.filter(r => r.category === 'exit')
   const entryDocs = requirements.filter(r => r.category === 'entry')
+  const transitDocs = requirements.filter(r => r.category === 'transit')
   const physicalReqs = requirements.filter(r => r.category === 'physical')
   const optionalReqs = requirements.filter(r => r.category === 'optional')
 
-  const onlineDocs = [...exitDocs, ...entryDocs].filter(r => r.deliveryType === 'online')
+  const onlineDocs = [...exitDocs, ...entryDocs, ...transitDocs].filter(r => r.deliveryType === 'online')
   const physicalDocs = physicalReqs.filter(r => r.deliveryType === 'physical' || !r.deliveryType)
 
   return (
     <div className="max-w-5xl mx-auto p-4 space-y-6">
       <div className="text-center space-y-4">
         <h2 className="text-3xl font-bold">Trip Requirements</h2>
-        <p className="text-muted-foreground">
-          {extractedData.origin} → {extractedData.destination}
-        </p>
+        <div className="space-y-2">
+          <p className="text-muted-foreground">
+            {extractedData.origin} → {extractedData.destination}
+          </p>
+          {extractedData.transitCountries && extractedData.transitCountries.length > 0 && (
+            <div className="flex items-center justify-center gap-2">
+              <Badge variant="outline" className="bg-accent/10 text-accent border-accent/30">
+                <span className="mr-1">🔄</span>
+                Transit via: {extractedData.transitCountries.join(', ')}
+              </Badge>
+            </div>
+          )}
+        </div>
         
         <div className="flex justify-center gap-3">
           <Button
@@ -142,6 +157,21 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
               </p>
               {entryDocs.filter(r => r.deliveryType === 'online').map((req, index) => (
                 <RequirementCard key={req.id} req={req} index={index + exitDocs.length} onToggle={toggleRequirement} />
+              ))}
+            </div>
+          )}
+
+          {transitDocs.filter(r => r.deliveryType === 'online').length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-accent uppercase tracking-wide flex items-center gap-2">
+                <span className="text-base">🔄</span>
+                Transit Countries
+              </p>
+              <p className="text-xs text-muted-foreground mb-2">
+                Documents needed for countries you're passing through
+              </p>
+              {transitDocs.filter(r => r.deliveryType === 'online').map((req, index) => (
+                <RequirementCard key={req.id} req={req} index={index + exitDocs.length + entryDocs.length} onToggle={toggleRequirement} />
               ))}
             </div>
           )}
