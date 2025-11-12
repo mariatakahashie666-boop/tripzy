@@ -71,7 +71,7 @@ function App() {
               <RequirementsChecklist extractedData={extractedData} onProceed={handleRequirementsProceed} />
             )}
             {currentStep === 4 && requirements.length > 0 && (
-              <Payment requirements={requirements} onPaymentComplete={handlePaymentComplete} />
+              <Payment requirements={requirements} extractedData={extractedData || undefined} onPaymentComplete={handlePaymentComplete} />
             )}
             {currentStep === 5 && extractedData && requirements.length > 0 && (
               <DocumentDelivery extractedData={extractedData} requirements={requirements} />

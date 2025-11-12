@@ -67,16 +67,6 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
   }
 ]
 
-export const PAYMENT_METHODS = [
-  { id: 'card', name: 'Credit/Debit Card', icon: '💳' },
-  { id: 'paypal', name: 'PayPal', icon: '🅿️' },
-  { id: 'applepay', name: 'Apple Pay', icon: '🍎' },
-  { id: 'googlepay', name: 'Google Pay', icon: '🅖' },
-  { id: 'crypto', name: 'Cryptocurrency', icon: '₿' },
-  { id: 'gcash', name: 'GCash', icon: '💰' },
-  { id: 'maya', name: 'Maya', icon: '💳' },
-]
-
 export const calculatePrice = (
   documentCount: number,
   hasVisa: boolean,
@@ -102,4 +92,22 @@ export const calculatePrice = (
   }
   
   return Math.min(price, 15)
+}
+
+export const detectPriceWithAI = async (requirements: any[], extractedData: any): Promise<number> => {
+  const documentCount = requirements.filter(r => r.category === 'exit' || r.category === 'entry').length
+  const hasVisa = requirements.some(r => r.name.toLowerCase().includes('visa'))
+  const hasReturn = extractedData?.returnDate && extractedData.returnDate !== ''
+  
+  let basePrice = 5
+  
+  if (documentCount > 2 || hasVisa) {
+    basePrice = 8
+  }
+  
+  if (hasReturn) {
+    return 15
+  }
+  
+  return basePrice
 }

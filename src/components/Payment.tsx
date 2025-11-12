@@ -1,154 +1,193 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
-import { TripRequirement } from '@/types'
+import { TripRequirement, ExtractedData } from '@/types'
 import { CheckCircle, CreditCard } from '@phosphor-icons/react'
-import { calculatePrice, PAYMENT_METHODS } from '@/lib/constants'
+import { detectPriceWithAI } from '@/lib/constants'
 import { motion } from 'framer-motion'
 
 interface PaymentProps {
   requirements: TripRequirement[]
+  extractedData?: ExtractedData
   onPaymentComplete: (plan: 'standard' | 'premium') => void
 }
 
-export default function Payment({ requirements, onPaymentComplete }: PaymentProps) {
-  const [selectedPlan, setSelectedPlan] = useState<'standard' | 'premium'>('standard')
+const PAYMENT_METHODS = [
+  { 
+    id: 'card', 
+    name: 'Card',
+    logo: (
+      <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none">
+        <rect x="4" y="10" width="40" height="28" rx="4" fill="#4A5568"/>
+        <rect x="4" y="16" width="40" height="6" fill="#2D3748"/>
+        <rect x="8" y="26" width="12" height="4" rx="1" fill="#CBD5E0"/>
+        <rect x="22" y="26" width="8" height="4" rx="1" fill="#CBD5E0"/>
+      </svg>
+    )
+  },
+  { 
+    id: 'paypal', 
+    name: 'PayPal',
+    logo: (
+      <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none">
+        <path d="M18 12h8c5 0 8 3 8 7s-3 7-8 7h-3l-2 10h-4l3-17h-2l3-7z" fill="#003087"/>
+        <path d="M16 19h8c5 0 8 3 8 7s-3 7-8 7h-3l-2 10h-4l3-17h-2l3-7z" fill="#009CDE"/>
+      </svg>
+    )
+  },
+  { 
+    id: 'applepay', 
+    name: 'Apple Pay',
+    logo: (
+      <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none">
+        <path d="M24 12c-1.5 0-2.8.5-3.8 1.4-.9.8-1.4 1.9-1.4 3.1 0 .2 0 .4.1.5 1.4-.1 2.7-.7 3.6-1.6.9-.9 1.4-2.1 1.4-3.4h.1zm4.5 5.5c-2.5 0-3.5 1.2-5.2 1.2-1.8 0-3.1-1.2-5.2-1.2-2.6 0-5.1 1.6-6.8 4.2-2.3 3.6-1.9 10.3 1.8 15.8 1.2 1.8 2.8 3.8 4.9 3.8 1.8 0 2.3-1.2 4.7-1.2 2.3 0 2.8 1.2 4.7 1.2 2.1 0 3.8-2.2 5.1-4 1-1.4 1.4-2.1 2.1-3.7-5.5-2.1-6.4-9.9-.9-12.8-1.5-2-3.8-3.3-6.2-3.3z" fill="currentColor"/>
+      </svg>
+    )
+  },
+  { 
+    id: 'googlepay', 
+    name: 'Google Pay',
+    logo: (
+      <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none">
+        <path d="M24 9.5v29" stroke="#5F6368" strokeWidth="3" strokeLinecap="round"/>
+        <path d="M31 24c0 3.9-3.1 7-7 7s-7-3.1-7-7 3.1-7 7-7" stroke="#4285F4" strokeWidth="3" strokeLinecap="round"/>
+        <path d="M31 17v14" stroke="#34A853" strokeWidth="3" strokeLinecap="round"/>
+        <path d="M35 24c0 3.9-3.1 7-7 7" stroke="#FBBC04" strokeWidth="3" strokeLinecap="round"/>
+        <path d="M28 17c3.9 0 7 3.1 7 7" stroke="#EA4335" strokeWidth="3" strokeLinecap="round"/>
+      </svg>
+    )
+  },
+  { 
+    id: 'crypto', 
+    name: 'Crypto',
+    logo: (
+      <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="16" fill="#F7931A"/>
+        <path d="M27.5 18.5c.3-2-1.2-3-3.2-3.7l.7-2.6-1.6-.4-.6 2.5c-.4-.1-.9-.2-1.3-.3l.7-2.6-1.6-.4-.7 2.6c-.3-.1-.7-.1-1-.2v0l-2.2-.5-.4 1.7s1.2.3 1.1.3c.7.2.8.6.8 1l-.8 3.2c0 .1.1.1.2.1h-.2l-1.1 4.4c-.1.2-.3.5-.8.4.0.0-1.1-.3-1.1-.3l-.8 1.8 2.1.5c.4.1.8.2 1.2.3l-.7 2.7 1.6.4.7-2.6c.4.1.9.2 1.4.3l-.7 2.6 1.6.4.7-2.7c2.9.5 5.1.3 6-2.3.7-2.1-.0-3.3-1.5-4.1 1.1-.3 1.9-1 2.1-2.6zm-3.8 5.3c-.5 2.1-4.1 1-5.2.7l.9-3.8c1.2.3 4.9.9 4.3 3.1zm.5-5.4c-.5 1.9-3.5.9-4.5.7l.8-3.4c1 .2 4.2.7 3.7 2.7z" fill="white"/>
+      </svg>
+    )
+  },
+  { 
+    id: 'gcash', 
+    name: 'GCash',
+    logo: (
+      <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none">
+        <rect width="48" height="48" rx="8" fill="#007DFF"/>
+        <path d="M18 28v-8h-2v10h8v-2h-6zm12-8c-2.2 0-4 1.8-4 4s1.8 4 4 4c1.4 0 2.6-.7 3.3-1.7l-1.6-1.1c-.4.5-1 .8-1.7.8-1.1 0-2-.9-2-2s.9-2 2-2c.7 0 1.3.3 1.7.8l1.6-1.1c-.7-1-1.9-1.7-3.3-1.7z" fill="white"/>
+      </svg>
+    )
+  },
+  { 
+    id: 'maya', 
+    name: 'Maya',
+    logo: (
+      <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none">
+        <rect width="48" height="48" rx="8" fill="#00D632"/>
+        <path d="M15 28V18h2.5l2.5 6.5 2.5-6.5H25v10h-2v-7l-2.5 6h-1l-2.5-6v7H15zm18-5c0-1.7-1.3-3-3-3s-3 1.3-3 3 1.3 3 3 3 3-1.3 3-3zm2 0c0 2.8-2.2 5-5 5s-5-2.2-5-5 2.2-5 5-5 5 2.2 5 5z" fill="white"/>
+      </svg>
+    )
+  },
+]
+
+export default function Payment({ requirements, extractedData, onPaymentComplete }: PaymentProps) {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('card')
   const [isProcessing, setIsProcessing] = useState(false)
+  const [detectedPrice, setDetectedPrice] = useState(5)
 
-  const documentCount = requirements.filter(r => r.category === 'exit' || r.category === 'entry').length
-  const standardPrice = calculatePrice(documentCount, false, 100, 0)
+  useEffect(() => {
+    const detectPrice = async () => {
+      const price = await detectPriceWithAI(requirements, extractedData)
+      setDetectedPrice(price)
+    }
+    detectPrice()
+  }, [requirements, extractedData])
 
   const handlePayment = async () => {
     setIsProcessing(true)
     await new Promise(resolve => setTimeout(resolve, 2000))
-    onPaymentComplete(selectedPlan)
+    onPaymentComplete(detectedPrice === 15 ? 'premium' : 'standard')
   }
 
+  const isRoundTrip = detectedPrice === 15
+  const features = isRoundTrip ? [
+    'Round-trip documents',
+    'Pre-filled forms (both ways)',
+    'Official government links',
+    'Saved for return trip',
+    'Priority support'
+  ] : [
+    'One-way documents',
+    'Pre-filled forms',
+    'Official government links',
+    'Data deleted after use'
+  ]
+
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
+    <div className="max-w-2xl mx-auto p-4 space-y-6">
       <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold">Choose Your Plan</h2>
+        <h2 className="text-3xl font-bold">Complete Your Payment</h2>
         <p className="text-muted-foreground">
-          Select the best option for your trip
+          AI-detected pricing based on your trip requirements
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          onClick={() => setSelectedPlan('standard')}
-        >
-          <Card className={`p-6 cursor-pointer transition-all ${
-            selectedPlan === 'standard'
-              ? 'ring-2 ring-primary shadow-lg'
-              : 'hover:shadow-md'
-          }`}>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold">Standard</h3>
-                <RadioGroup value={selectedPlan}>
-                  <RadioGroupItem value="standard" />
-                </RadioGroup>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <Card className="p-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold">
+                  {isRoundTrip ? 'Round-trip Package' : 'One-way Package'}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {isRoundTrip ? 'Complete documentation for your journey' : 'Essential travel documents'}
+                </p>
               </div>
-              
-              <div className="text-4xl font-bold">
-                ${standardPrice}
+              <div className="text-right">
+                <div className="text-3xl font-bold">
+                  ${detectedPrice}
+                </div>
               </div>
-              
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2">
-                  <CheckCircle size={20} className="text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">One-way documents</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle size={20} className="text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">Pre-filled forms</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle size={20} className="text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">Official government links</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle size={20} className="text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">Data deleted after use</span>
-                </li>
-              </ul>
-            </div>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          onClick={() => setSelectedPlan('premium')}
-        >
-          <Card className={`p-6 cursor-pointer transition-all relative ${
-            selectedPlan === 'premium'
-              ? 'ring-2 ring-accent shadow-lg'
-              : 'hover:shadow-md'
-          }`}>
-            <div className="absolute -top-3 -right-3 bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-semibold">
-              Best Value
             </div>
             
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold">Premium</h3>
-                <RadioGroup value={selectedPlan}>
-                  <RadioGroupItem value="premium" />
-                </RadioGroup>
-              </div>
-              
-              <div className="text-4xl font-bold">
-                $20
-              </div>
-              
+            <div className="pt-2">
               <ul className="space-y-2">
-                <li className="flex items-start gap-2">
-                  <CheckCircle size={20} className="text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">Round-trip documents</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle size={20} className="text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">Pre-filled forms (both ways)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle size={20} className="text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">Official government links</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle size={20} className="text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">Saved for return trip</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle size={20} className="text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">Priority support</span>
-                </li>
+                {features.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <CheckCircle size={18} className="text-success flex-shrink-0 mt-0.5" weight="fill" />
+                    <span className="text-sm">{feature}</span>
+                  </li>
+                ))}
               </ul>
             </div>
-          </Card>
-        </motion.div>
-      </div>
+          </div>
+        </Card>
+      </motion.div>
 
-      <Card className="p-6 space-y-4">
-        <h3 className="font-semibold text-lg">Payment Method</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <Card className="p-5 space-y-4">
+        <h3 className="font-semibold">Payment Method</h3>
+        <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
           {PAYMENT_METHODS.map((method) => (
-            <Button
+            <button
               key={method.id}
-              variant={selectedPaymentMethod === method.id ? 'default' : 'outline'}
-              className="justify-start"
               onClick={() => setSelectedPaymentMethod(method.id)}
+              className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-all hover:scale-105 ${
+                selectedPaymentMethod === method.id
+                  ? 'border-primary bg-primary/5 shadow-sm'
+                  : 'border-border hover:border-primary/50'
+              }`}
             >
-              <span className="mr-2">{method.icon}</span>
-              {method.name}
-            </Button>
+              <div className="flex items-center justify-center">
+                {method.logo}
+              </div>
+              <span className="text-[10px] font-medium text-center leading-tight">
+                {method.name}
+              </span>
+            </button>
           ))}
         </div>
       </Card>
@@ -158,7 +197,7 @@ export default function Payment({ requirements, onPaymentComplete }: PaymentProp
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
         >
-          <Card className="p-6 space-y-4">
+          <Card className="p-5 space-y-4">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="cardNumber">Card Number</Label>
@@ -199,21 +238,21 @@ export default function Payment({ requirements, onPaymentComplete }: PaymentProp
         </motion.div>
       )}
 
-      <Card className="p-4 bg-muted/50">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Total Amount</span>
+      <Card className="p-4 bg-muted/30">
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground font-medium">Total Amount</span>
           <span className="text-2xl font-bold">
-            ${selectedPlan === 'standard' ? standardPrice : 20}
+            ${detectedPrice}
           </span>
         </div>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-center">
         <Button
           size="lg"
           onClick={handlePayment}
           disabled={isProcessing}
-          className="min-w-40 bg-accent hover:bg-accent/90 text-accent-foreground"
+          className="w-full md:w-auto min-w-48 bg-accent hover:bg-accent/90 text-accent-foreground"
         >
           {isProcessing ? (
             <div className="flex items-center gap-2">
@@ -221,7 +260,7 @@ export default function Payment({ requirements, onPaymentComplete }: PaymentProp
               Processing...
             </div>
           ) : (
-            `Pay $${selectedPlan === 'standard' ? standardPrice : 20}`
+            `Pay $${detectedPrice}`
           )}
         </Button>
       </div>
