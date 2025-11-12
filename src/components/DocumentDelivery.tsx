@@ -92,12 +92,12 @@ export default function DocumentDelivery({ extractedData, requirements }: Docume
         </p>
       </div>
 
-      <Card className="p-4 bg-accent/10 border-accent">
-        <div className="flex items-start gap-3">
-          <Warning size={24} className="text-accent flex-shrink-0 mt-0.5" />
+      <Card className="p-2 bg-accent/10 border-accent">
+        <div className="flex items-start gap-2">
+          <Warning size={16} className="text-accent flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium">Please double-check each document</p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm font-medium">Please double-check each document</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
               AI can make mistakes. Review all pre-filled information carefully before submitting.
             </p>
           </div>

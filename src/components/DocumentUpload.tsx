@@ -303,12 +303,12 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
                   />
                 </div>
 
-                <Card className="p-4 bg-accent/10 border-accent">
-                  <div className="flex items-start gap-3">
-                    <Warning size={24} className="text-accent shrink-0 mt-0.5" weight="fill" />
-                    <div className="space-y-2 text-sm">
+                <Card className="p-2 bg-accent/10 border-accent">
+                  <div className="flex items-start gap-2">
+                    <Warning size={16} className="text-accent shrink-0 mt-0.5" weight="fill" />
+                    <div className="space-y-1 text-xs">
                       <p className="font-semibold">Please verify your document is:</p>
-                      <ul className="space-y-1 text-muted-foreground">
+                      <ul className="space-y-0.5 text-muted-foreground">
                         <li>✓ All text is clear and readable</li>
                         <li>✓ No blur or glare</li>
                         <li>✓ All corners visible</li>
@@ -319,10 +319,10 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
                   </div>
                 </Card>
 
-                <Card className="p-4 bg-muted/50">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle size={24} className="text-success shrink-0 mt-0.5" weight="fill" />
-                    <div className="space-y-1 text-sm">
+                <Card className="p-2 bg-muted/50">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle size={16} className="text-success shrink-0 mt-0.5" weight="fill" />
+                    <div className="space-y-0.5 text-xs">
                       <p className="font-medium">Clear documents = Better accuracy</p>
                       <p className="text-muted-foreground">
                         High quality photos help us extract your information with 99% accuracy

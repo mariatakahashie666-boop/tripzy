@@ -115,12 +115,12 @@ export default function DataVerification({ files, onVerified }: DataVerification
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Card className="p-4 bg-destructive/10 border-destructive">
-            <div className="flex items-start gap-3">
-              <Warning size={24} className="text-destructive flex-shrink-0 mt-0.5" />
+          <Card className="p-2 bg-destructive/10 border-destructive">
+            <div className="flex items-start gap-2">
+              <Warning size={16} className="text-destructive flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-destructive">Very Low Confidence Scan</p>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm font-medium text-destructive">Very Low Confidence Scan</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Confidence: {extractedData.confidence}% - We had difficulty reading your documents. Please verify all fields very carefully and correct any errors.
                 </p>
               </div>
@@ -134,12 +134,12 @@ export default function DataVerification({ files, onVerified }: DataVerification
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Card className="p-4 bg-accent/10 border-accent">
-            <div className="flex items-start gap-3">
-              <Warning size={24} className="text-accent flex-shrink-0 mt-0.5" />
+          <Card className="p-2 bg-accent/10 border-accent">
+            <div className="flex items-start gap-2">
+              <Warning size={16} className="text-accent flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium">Good Scan - Please Verify</p>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm font-medium">Good Scan - Please Verify</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Confidence: {extractedData.confidence}% - Most fields were read successfully. Please review carefully before proceeding.
                 </p>
               </div>
@@ -153,12 +153,12 @@ export default function DataVerification({ files, onVerified }: DataVerification
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Card className="p-4 bg-success/10 border-success">
-            <div className="flex items-start gap-3">
-              <CheckCircle size={24} className="text-success flex-shrink-0 mt-0.5" weight="fill" />
+          <Card className="p-2 bg-success/10 border-success">
+            <div className="flex items-start gap-2">
+              <CheckCircle size={16} className="text-success flex-shrink-0 mt-0.5" weight="fill" />
               <div>
-                <p className="font-medium text-success">Excellent Scan! 🎉</p>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm font-medium text-success">Excellent Scan! 🎉</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Confidence: {extractedData.confidence}% - All key information extracted successfully. Please verify the details below are correct.
                 </p>
               </div>
