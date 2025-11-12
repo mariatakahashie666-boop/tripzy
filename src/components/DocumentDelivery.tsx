@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { ExtractedData, TripRequirement, TravelDocument } from '@/types'
-import { FilePdf, ArrowSquareOut, Warning, CheckCircle, Download } from '@phosphor-icons/react'
+import { FilePdf, ArrowSquareOut, Warning, CheckCircle, ShieldCheck, Trash } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import { generateDocuments } from '@/lib/ai-service'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { useKV } from '@github/spark/hooks'
 
 interface DocumentDeliveryProps {
   extractedData: ExtractedData
@@ -17,6 +19,12 @@ export default function DocumentDelivery({ extractedData, requirements }: Docume
   const [documents, setDocuments] = useState<TravelDocument[]>([])
   const [isGenerating, setIsGenerating] = useState(true)
   const [completedDocs, setCompletedDocs] = useState<Set<string>>(new Set())
+  const [showCongratsPage, setShowCongratsPage] = useState(false)
+  const [showLawsDialog, setShowLawsDialog] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [wantsLaws, setWantsLaws] = useState<boolean | null>(null)
+  
+  const [userData] = useKV<any>('user-travel-data', undefined)
 
   useEffect(() => {
     const generate = async () => {
@@ -38,6 +46,22 @@ export default function DocumentDelivery({ extractedData, requirements }: Docume
       }
       return next
     })
+  }
+
+  const handleFinish = () => {
+    setShowCongratsPage(true)
+  }
+
+  const handleDeleteData = async () => {
+    try {
+      await window.spark.kv.delete('user-travel-data')
+      await window.spark.kv.delete('extracted-data')
+      await window.spark.kv.delete('requirements')
+      setShowDeleteConfirm(false)
+      window.location.href = '/'
+    } catch (error) {
+      console.error('Error deleting data:', error)
+    }
   }
 
   if (isGenerating) {
@@ -76,6 +100,56 @@ export default function DocumentDelivery({ extractedData, requirements }: Docume
   }
 
   const allCompleted = documents.every(doc => completedDocs.has(doc.id))
+
+  const isSingapore = extractedData.destination.toLowerCase().includes('singapore')
+  const isThailand = extractedData.destination.toLowerCase().includes('thailand')
+  const isJapan = extractedData.destination.toLowerCase().includes('japan')
+
+  const getCountryLaws = () => {
+    if (isSingapore) {
+      return [
+        { law: 'Vaping is illegal', fine: 'Up to SGD 2,000 (~PHP 90,000)' },
+        { law: 'No chewing gum (except medicinal)', fine: 'Fine up to SGD 1,000' },
+        { law: 'Do not litter', fine: 'SGD 300-1,000 fine' },
+        { law: 'No smoking except designated areas', fine: 'SGD 200-1,000 fine' },
+        { law: 'No eating/drinking in public transport (including Grab)', fine: 'SGD 500 fine' },
+        { law: 'No jaywalking', fine: 'SGD 50 fine for first offense' },
+        { law: 'No public intoxication', fine: 'Arrest and prosecution' },
+        { law: 'No drugs (zero tolerance)', fine: 'Death penalty for trafficking' },
+      ]
+    } else if (isThailand) {
+      return [
+        { law: 'Do not disrespect monarchy or Buddha images', fine: 'Imprisonment' },
+        { law: 'Dress modestly in temples', fine: 'May be denied entry' },
+        { law: 'No drugs', fine: 'Severe penalties including death' },
+        { law: 'Respect monks - women cannot touch', fine: 'Cultural offense' },
+        { law: 'Do not step on Thai currency (has King\'s image)', fine: 'Jail time' },
+      ]
+    } else if (isJapan) {
+      return [
+        { law: 'No loud talking on trains', fine: 'Social disapproval' },
+        { law: 'Remove shoes when entering homes/temples', fine: 'Major offense' },
+        { law: 'No tipping (considered rude)', fine: 'Cultural offense' },
+        { law: 'Dispose of trash properly - no public bins', fine: 'Take trash with you' },
+        { law: 'No drugs (including CBD products)', fine: 'Immediate deportation' },
+      ]
+    }
+    return []
+  }
+
+  if (showCongratsPage) {
+    return <CongratsPage
+      destination={extractedData.destination}
+      onShowLaws={() => setShowLawsDialog(true)}
+      onDeleteData={() => setShowDeleteConfirm(true)}
+      laws={getCountryLaws()}
+      showLawsDialog={showLawsDialog}
+      onCloseLawsDialog={() => setShowLawsDialog(false)}
+      showDeleteConfirm={showDeleteConfirm}
+      onCancelDelete={() => setShowDeleteConfirm(false)}
+      onConfirmDelete={handleDeleteData}
+    />
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -220,25 +294,220 @@ export default function DocumentDelivery({ extractedData, requirements }: Docume
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <Card className="p-6 bg-success/10 border-success text-center">
-            <CheckCircle size={48} className="text-success mx-auto mb-3" weight="duotone" />
-            <h3 className="text-xl font-bold mb-2">All Documents Submitted! 🎉</h3>
-            <p className="text-muted-foreground">
-              You're all set for your trip. Have a wonderful journey!
+          <Card className="p-8 bg-success/10 border-success text-center space-y-4">
+            <CheckCircle size={64} className="text-success mx-auto" weight="duotone" />
+            <h3 className="text-2xl font-bold">All Documents Submitted! 🎉</h3>
+            <p className="text-muted-foreground mb-4">
+              You're all set! Let's get you ready for your trip.
             </p>
+            <Button
+              size="lg"
+              onClick={handleFinish}
+              className="min-w-48"
+            >
+              Finish & View Travel Tips
+            </Button>
           </Card>
         </motion.div>
       )}
+    </div>
+  )
+}
+
+interface CongratsPageProps {
+  destination: string
+  onShowLaws: () => void
+  onDeleteData: () => void
+  laws: Array<{ law: string; fine: string }>
+  showLawsDialog: boolean
+  onCloseLawsDialog: () => void
+  showDeleteConfirm: boolean
+  onCancelDelete: () => void
+  onConfirmDelete: () => void
+}
+
+function CongratsPage({
+  destination,
+  onShowLaws,
+  onDeleteData,
+  laws,
+  showLawsDialog,
+  onCloseLawsDialog,
+  showDeleteConfirm,
+  onCancelDelete,
+  onConfirmDelete
+}: CongratsPageProps) {
+  const countryName = destination.split(',')[1]?.trim() || destination
+
+  return (
+    <div className="max-w-4xl mx-auto p-4 space-y-8">
+      <motion.div
+        initial={{ scale: 0, rotate: -180 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: 'spring', duration: 0.8 }}
+        className="text-center"
+      >
+        <div className="text-8xl mb-4">🎉</div>
+        <h1 className="text-4xl font-bold mb-2">CONGRATULATIONS!</h1>
+        <p className="text-xl text-muted-foreground">Your documents are ready for {destination}</p>
+      </motion.div>
+
+      <Card className="p-8 space-y-6 border-2 border-accent">
+        <div className="flex items-start gap-4">
+          <Warning size={32} className="text-accent shrink-0" weight="duotone" />
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold">Important Reminder</h2>
+            
+            {countryName.toLowerCase().includes('singapore') && (
+              <div className="space-y-3">
+                <p className="text-base leading-relaxed">
+                  <strong>Singapore is a strict country implementing rules without exemption.</strong> They have strict goals of keeping their country clean and safe. As a visitor, you must obey their laws and respect everyone. Better be careful and read their laws carefully.
+                </p>
+                
+                <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 space-y-2">
+                  <p className="font-semibold text-destructive flex items-center gap-2">
+                    <Warning size={20} />
+                    Key Laws to Remember:
+                  </p>
+                  <ul className="space-y-1.5 text-sm">
+                    <li>• <strong>Vapes are NOT allowed</strong> - can charge you up to SGD 2,000 (~PHP 90,000)</li>
+                    <li>• <strong>Make sure you stand and walk on proper sides</strong></li>
+                    <li>• <strong>Join the queues</strong> - cutting in line is offensive</li>
+                    <li>• <strong>Do not litter</strong> - Singapore is "The Fine Country" for the fines they give</li>
+                    <li>• <strong>No chewing gum</strong> (except medicinal)</li>
+                    <li>• <strong>Foods and drinks NOT allowed in public transportation</strong> (Grab is no exemption)</li>
+                    <li>• <strong>Do not smoke</strong> unless in specifically designated areas</li>
+                    <li>• <strong>No drugs</strong> - Zero tolerance policy</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {countryName.toLowerCase().includes('thailand') && (
+              <div className="space-y-3">
+                <p className="text-base leading-relaxed">
+                  <strong>Thailand has strict cultural and legal rules.</strong> Show respect to the monarchy, Buddha images, and monks at all times.
+                </p>
+                
+                <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 space-y-2">
+                  <p className="font-semibold text-destructive flex items-center gap-2">
+                    <Warning size={20} />
+                    Key Laws to Remember:
+                  </p>
+                  <ul className="space-y-1.5 text-sm">
+                    <li>• <strong>Never disrespect monarchy or Buddha images</strong> - serious offense</li>
+                    <li>• <strong>Dress modestly in temples</strong> - cover shoulders and knees</li>
+                    <li>• <strong>Women cannot touch monks</strong></li>
+                    <li>• <strong>Do not step on Thai currency</strong> (has King's image)</li>
+                    <li>• <strong>No drugs</strong> - severe penalties</li>
+                    <li>• <strong>Remove shoes before entering temples/homes</strong></li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {!countryName.toLowerCase().includes('singapore') && !countryName.toLowerCase().includes('thailand') && (
+              <p className="text-base leading-relaxed">
+                Every country has its own laws and customs. Please research and respect the local laws of {countryName}. When in doubt, observe what locals do and follow their lead.
+              </p>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      {laws.length > 0 && (
+        <Card className="p-6 bg-muted/50">
+          <div className="text-center space-y-4">
+            <h3 className="text-lg font-semibold">Do you want more details about local laws?</h3>
+            <p className="text-sm text-muted-foreground">
+              Get the complete list of laws that might be legal in your country but illegal in {countryName}
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button onClick={onShowLaws} size="lg">
+                ✅ Yes, Show Me
+              </Button>
+              <Button variant="outline" onClick={() => {}} size="lg">
+                ❌ No, Thanks
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      <Card className="p-6 border-destructive/50">
+        <div className="text-center space-y-4">
+          <Trash size={32} className="text-destructive mx-auto" weight="duotone" />
+          <h3 className="text-lg font-semibold">Delete My Information</h3>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            Your privacy is important. All your uploaded documents and personal information are encrypted and can be deleted anytime.
+          </p>
+          <Button
+            variant="destructive"
+            onClick={onDeleteData}
+            size="lg"
+          >
+            Delete All My Data
+          </Button>
+        </div>
+      </Card>
 
       <div className="flex justify-center">
         <Button
           size="lg"
           variant="outline"
-          onClick={() => window.location.reload()}
+          onClick={() => window.location.href = '/'}
         >
           Start Another Trip
         </Button>
       </div>
+
+      <Dialog open={showLawsDialog} onOpenChange={onCloseLawsDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Complete List of {countryName} Laws</DialogTitle>
+            <DialogDescription>
+              Laws that might be different from your home country
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {laws.map((item, index) => (
+              <Card key={index} className="p-4">
+                <div className="flex items-start gap-3">
+                  <Badge variant="destructive" className="shrink-0">{index + 1}</Badge>
+                  <div className="flex-1">
+                    <p className="font-semibold">{item.law}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      <strong>Penalty:</strong> {item.fine}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+          <Button onClick={onCloseLawsDialog} className="w-full">
+            I Understand
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDeleteConfirm} onOpenChange={onCancelDelete}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete All Your Data?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete all your uploaded documents, extracted information, and trip details. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={onCancelDelete}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={onConfirmDelete}>
+              Yes, Delete Everything
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

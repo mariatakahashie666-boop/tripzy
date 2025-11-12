@@ -8,6 +8,10 @@ export interface TravelDocument {
   pdfUrl?: string
   officialUrl: string
   lastVerified: string
+  deliveryType?: 'online' | 'physical'
+  country?: string
+  verifiedSource?: string
+  tips?: string
 }
 
 export interface ExtractedData {
@@ -33,6 +37,11 @@ export interface TripRequirement {
   name: string
   description: string
   userHas: boolean
+  deliveryType?: 'online' | 'physical'
+  country?: string
+  officialUrl?: string
+  verifiedSource?: string
+  tips?: string
 }
 
 export interface Trip {

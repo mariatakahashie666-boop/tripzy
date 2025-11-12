@@ -274,27 +274,131 @@ export const analyzeRequirements = async (
   destination: string,
   nationality: string
 ): Promise<TripRequirement[]> => {
-  await new Promise(resolve => setTimeout(resolve, 1500))
+  console.log('🔍 Analyzing requirements for:', { origin, destination, nationality })
   
-  const isThailand = destination.toLowerCase().includes('thailand')
+  // @ts-ignore - TypeScript has issues with template literals in certain contexts
+  const prompt = window.spark.llmPrompt`You are a travel document requirements expert. Analyze the following trip details and provide ALL required documents.
+
+TRIP DETAILS:
+- Origin: ${origin}
+- Destination: ${destination}
+- Nationality: ${nationality}
+
+CRITICAL INSTRUCTIONS:
+1. Research ACTUAL current requirements for this specific route
+2. Categorize each document into:
+   - "exit": Documents required by the ORIGIN country to LEAVE
+   - "entry": Documents required by the DESTINATION country to ENTER
+   - "physical": Physical documents that must be carried (passport, tickets, vaccination cards)
+   - "optional": Recommended but not mandatory (tourist attractions, transportation apps, insurance)
+
+3. For each document specify:
+   - deliveryType: "online" (can be filled online) or "physical" (must physically carry)
+   - country: Which country requires it (use full name)
+   - officialUrl: The OFFICIAL government website URL (use .gov domains only, verified sources)
+   - verifiedSource: Name of the official source
+   - tips: Helpful advice (when to submit, what to prepare, time limits, etc.)
+
+EXAMPLE FORMAT:
+{
+  "requirements": [
+    {
+      "id": "unique-id",
+      "category": "exit",
+      "name": "Departure Card",
+      "description": "Required online registration before leaving Philippines",
+      "deliveryType": "online",
+      "country": "Philippines",
+      "officialUrl": "https://etravel.gov.ph",
+      "verifiedSource": "Philippine Bureau of Immigration",
+      "tips": "Submit within 72 hours before departure. Everyone is required to submit, no exemptions."
+    }
+  ]
+}
+
+IMPORTANT NOTES:
+- For Singapore: They have strict entry requirements, online arrival card system
+- For Thailand: Arrival card TM.6 required
+- For Philippines departure: eTravel required
+- Include visa requirements if applicable
+- Include vaccination requirements if applicable
+- For optional items: Include tourist attractions with booking discounts, local transport apps (Grab, Uber equivalents), eSIM recommendations
+
+Return ONLY valid JSON with the "requirements" array.`
+
+  try {
+    const response = await window.spark.llm(prompt, "gpt-4o", true)
+    const parsed = JSON.parse(response)
+    const requirements = parsed.requirements || []
+    
+    const formattedRequirements: TripRequirement[] = requirements.map((req: any, index: number) => ({
+      id: req.id || `req-${index}`,
+      category: req.category || 'optional',
+      name: req.name || 'Unknown',
+      description: req.description || '',
+      deliveryType: req.deliveryType,
+      country: req.country,
+      officialUrl: req.officialUrl,
+      verifiedSource: req.verifiedSource,
+      tips: req.tips,
+      userHas: false
+    }))
+    
+    console.log('✅ Requirements analyzed:', formattedRequirements.length, 'items found')
+    return formattedRequirements
+    
+  } catch (error) {
+    console.error('❌ Error analyzing requirements:', error)
+    return getFallbackRequirements(origin, destination)
+  }
+}
+
+const getFallbackRequirements = (origin: string, destination: string): TripRequirement[] => {
   const isPhilippines = origin.toLowerCase().includes('philippines')
+  const isSingapore = destination.toLowerCase().includes('singapore')
+  const isThailand = destination.toLowerCase().includes('thailand')
   
   const requirements: TripRequirement[] = []
   
   if (isPhilippines) {
+    requirements.push({
+      id: 'ph-etravel',
+      category: 'exit',
+      name: 'eTravel Registration',
+      description: 'Required online departure registration for all travelers leaving Philippines',
+      deliveryType: 'online',
+      country: 'Philippines',
+      officialUrl: 'https://etravel.gov.ph',
+      verifiedSource: 'Philippine Bureau of Immigration',
+      tips: 'Submit within 72 hours before departure. Immigration requirement for all departing passengers.',
+      userHas: false
+    })
+  }
+  
+  if (isSingapore) {
     requirements.push(
       {
-        id: 'ph-etravel',
-        category: 'exit',
-        name: 'eTravel Registration',
-        description: 'Required for all Philippine departures',
+        id: 'sg-arrival-card',
+        category: 'entry',
+        name: 'Singapore Arrival Card',
+        description: 'Electronic arrival card required before entry. Submit up to 3 days before arrival.',
+        deliveryType: 'online',
+        country: 'Singapore',
+        officialUrl: 'https://eservices.ica.gov.sg/sgarrivalcard',
+        verifiedSource: 'Singapore Immigration & Checkpoints Authority',
+        tips: 'Can submit earlier but not more than 3 days. Better to submit upon arrival. Save QR code to show officers.',
         userHas: false
       },
       {
-        id: 'ph-customs',
-        category: 'exit',
-        name: 'Customs Declaration',
-        description: 'Philippine customs clearance form',
+        id: 'sg-visa',
+        category: 'entry',
+        name: 'Visa-Free Entry / VFTF',
+        description: 'Visa-required travelers can use Visa-Free Transit Facility for stays less than 96 hours if eligible',
+        deliveryType: 'online',
+        country: 'Singapore',
+        officialUrl: 'https://www.ica.gov.sg/enter-transit-depart/entering-singapore',
+        verifiedSource: 'Singapore ICA',
+        tips: 'Check if your nationality requires a visa. Most ASEAN citizens get 30-90 days visa-free.',
         userHas: false
       }
     )
@@ -303,17 +407,15 @@ export const analyzeRequirements = async (
   if (isThailand) {
     requirements.push(
       {
-        id: 'th-arrival',
+        id: 'th-arrival-card',
         category: 'entry',
-        name: 'Thailand Arrival Card',
-        description: 'TM.6 Immigration form',
-        userHas: false
-      },
-      {
-        id: 'th-declaration',
-        category: 'entry',
-        name: 'Thailand Arrival Declaration',
-        description: 'Health and customs declaration',
+        name: 'Thailand Arrival Card (TM.6)',
+        description: 'Immigration card required for all visitors entering Thailand',
+        deliveryType: 'physical',
+        country: 'Thailand',
+        officialUrl: 'https://www.immigration.go.th',
+        verifiedSource: 'Thailand Immigration Bureau',
+        tips: 'Usually provided on the plane or available at airport. Keep the departure portion safe.',
         userHas: false
       }
     )
@@ -324,28 +426,61 @@ export const analyzeRequirements = async (
       id: 'passport-valid',
       category: 'physical',
       name: 'Valid Passport',
-      description: 'Must be valid for 6+ months',
+      description: 'Passport must be valid for at least 6 months from date of entry',
+      deliveryType: 'physical',
+      tips: 'Check expiry date carefully. Most countries require 6 months validity.',
       userHas: false
     },
     {
       id: 'return-ticket',
       category: 'physical',
-      name: 'Return Ticket',
-      description: 'Proof of onward travel',
+      name: 'Return/Onward Ticket',
+      description: 'Proof of departure from destination country',
+      deliveryType: 'physical',
+      tips: 'Print or have electronic copy ready. Immigration may ask to see this.',
+      userHas: false
+    }
+  )
+  
+  if (isSingapore) {
+    requirements.push({
+      id: 'sg-river-cruise',
+      category: 'optional',
+      name: 'Singapore River Cruise',
+      description: 'Popular tourist attraction with online booking discounts',
+      deliveryType: 'online',
+      officialUrl: 'https://www.rivercruise.com.sg',
+      tips: 'Book online for discounts compared to walk-in rates.',
+      userHas: false
+    })
+  }
+  
+  requirements.push(
+    {
+      id: 'vaccination-card',
+      category: 'physical',
+      name: 'Vaccination Card',
+      description: 'Required if destination mandates proof of vaccination',
+      deliveryType: 'physical',
+      tips: 'Bring if your destination requires COVID-19 or other vaccinations. Check current health requirements.',
       userHas: false
     },
     {
-      id: 'hotel-confirm',
+      id: 'esim-service',
+      category: 'optional',
+      name: 'eSIM / Local Data',
+      description: 'Stay connected with local mobile data',
+      deliveryType: 'online',
+      tips: 'Book eSIM before departure for instant connectivity upon arrival.',
+      userHas: false
+    },
+    {
+      id: 'hotel-booking',
       category: 'optional',
       name: 'Hotel Confirmation',
-      description: 'Accommodation proof',
-      userHas: false
-    },
-    {
-      id: 'travel-insurance',
-      category: 'optional',
-      name: 'Travel Insurance',
-      description: 'Recommended coverage',
+      description: 'Accommodation proof, may be requested by immigration',
+      deliveryType: 'online',
+      tips: 'Print or save digital copy. Some countries require this for visa-free entry.',
       userHas: false
     }
   )

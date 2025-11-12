@@ -3,11 +3,12 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ExtractedData, TripRequirement } from '@/types'
-import { ListChecks, Airplane, Shield, Star } from '@phosphor-icons/react'
+import { ListChecks, Airplane, Shield, Star, ArrowSquareOut, ShieldCheck } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import { analyzeRequirements } from '@/lib/ai-service'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { AFFILIATE_PARTNERS } from '@/lib/constants'
+import { Badge } from '@/components/ui/badge'
 
 interface RequirementsChecklistProps {
   extractedData: ExtractedData
@@ -18,6 +19,7 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
   const [requirements, setRequirements] = useState<TripRequirement[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showAffiliateDialog, setShowAffiliateDialog] = useState(false)
+  const [tripType, setTripType] = useState<'tourist' | 'business'>('tourist')
 
   useEffect(() => {
     const loadRequirements = async () => {
@@ -58,14 +60,14 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
     switch (category) {
       case 'exit': return 'Exit Documents (Departure Country)'
       case 'entry': return 'Entry Documents (Destination Country)'
-      case 'physical': return 'Physical Requirements'
+      case 'physical': return 'Must Carry Physically'
       case 'optional': return 'Optional (Recommended)'
     }
   }
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto p-4 flex items-center justify-center min-h-[60vh]">
+      <div className="max-w-5xl mx-auto p-4 flex items-center justify-center min-h-[60vh]">
         <Card className="p-8 text-center space-y-4">
           <div className="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
           <h3 className="text-xl font-semibold">Analyzing Requirements...</h3>
@@ -82,174 +84,141 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
   const physicalReqs = requirements.filter(r => r.category === 'physical')
   const optionalReqs = requirements.filter(r => r.category === 'optional')
 
+  const onlineDocs = [...exitDocs, ...entryDocs].filter(r => r.deliveryType === 'online')
+  const physicalDocs = physicalReqs.filter(r => r.deliveryType === 'physical' || !r.deliveryType)
+
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold">Required Documents</h2>
+    <div className="max-w-5xl mx-auto p-4 space-y-6">
+      <div className="text-center space-y-4">
+        <h2 className="text-3xl font-bold">Trip Requirements</h2>
         <p className="text-muted-foreground">
-          Here's what you need for your trip. Check items you already have.
+          {extractedData.origin} → {extractedData.destination}
         </p>
+        
+        <div className="flex justify-center gap-3">
+          <Button
+            variant={tripType === 'tourist' ? 'default' : 'outline'}
+            onClick={() => setTripType('tourist')}
+            size="sm"
+          >
+            🏖️ Tourist
+          </Button>
+          <Button
+            variant={tripType === 'business' ? 'default' : 'outline'}
+            onClick={() => setTripType('business')}
+            size="sm"
+          >
+            💼 Business
+          </Button>
+        </div>
       </div>
 
-      <Card className="p-6 space-y-6">
-        {exitDocs.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="font-semibold text-lg flex items-center gap-2">
-              {getCategoryIcon('exit')} {getCategoryTitle('exit')}
-            </h3>
+      <div className="grid lg:grid-cols-2 gap-6">
+        <Card className="p-6 space-y-4">
+          <h3 className="font-semibold text-lg flex items-center gap-2 border-b pb-2">
+            <span className="text-2xl">📱</span>
+            <div>
+              Online Documents
+              <p className="text-xs font-normal text-muted-foreground">Can be submitted online</p>
+            </div>
+          </h3>
+          
+          {exitDocs.filter(r => r.deliveryType === 'online').length > 0 && (
             <div className="space-y-2">
-              {exitDocs.map((req, index) => (
-                <motion.div
-                  key={req.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Card className="p-4 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        id={req.id}
-                        checked={req.userHas}
-                        onCheckedChange={() => toggleRequirement(req.id)}
-                        className="mt-1"
-                      />
-                      <div className="flex-1">
-                        <label htmlFor={req.id} className="font-medium cursor-pointer">
-                          {req.name}
-                        </label>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {req.description}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
+              <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                {extractedData.origin} Immigration
+              </p>
+              {exitDocs.filter(r => r.deliveryType === 'online').map((req, index) => (
+                <RequirementCard key={req.id} req={req} index={index} onToggle={toggleRequirement} />
               ))}
             </div>
-          </div>
-        )}
+          )}
 
-        {entryDocs.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="font-semibold text-lg flex items-center gap-2">
-              {getCategoryIcon('entry')} {getCategoryTitle('entry')}
-            </h3>
+          {entryDocs.filter(r => r.deliveryType === 'online').length > 0 && (
             <div className="space-y-2">
-              {entryDocs.map((req, index) => (
-                <motion.div
-                  key={req.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (exitDocs.length + index) * 0.05 }}
-                >
-                  <Card className="p-4 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        id={req.id}
-                        checked={req.userHas}
-                        onCheckedChange={() => toggleRequirement(req.id)}
-                        className="mt-1"
-                      />
-                      <div className="flex-1">
-                        <label htmlFor={req.id} className="font-medium cursor-pointer">
-                          {req.name}
-                        </label>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {req.description}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
+              <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                {extractedData.destination} Immigration
+              </p>
+              {entryDocs.filter(r => r.deliveryType === 'online').map((req, index) => (
+                <RequirementCard key={req.id} req={req} index={index + exitDocs.length} onToggle={toggleRequirement} />
               ))}
             </div>
-          </div>
-        )}
+          )}
 
-        {physicalReqs.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="font-semibold text-lg flex items-center gap-2">
-              {getCategoryIcon('physical')} {getCategoryTitle('physical')}
-            </h3>
-            <div className="space-y-2">
-              {physicalReqs.map((req, index) => (
-                <motion.div
-                  key={req.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (exitDocs.length + entryDocs.length + index) * 0.05 }}
-                >
-                  <Card className="p-4 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        id={req.id}
-                        checked={req.userHas}
-                        onCheckedChange={() => toggleRequirement(req.id)}
-                        className="mt-1"
-                      />
-                      <div className="flex-1">
-                        <label htmlFor={req.id} className="font-medium cursor-pointer">
-                          {req.name}
-                        </label>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {req.description}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        )}
+          {onlineDocs.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No online documents required
+            </p>
+          )}
+        </Card>
 
-        {optionalReqs.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="font-semibold text-lg flex items-center gap-2">
-              {getCategoryIcon('optional')} {getCategoryTitle('optional')}
-            </h3>
-            <div className="space-y-2">
-              {optionalReqs.map((req, index) => (
-                <motion.div
-                  key={req.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (exitDocs.length + entryDocs.length + physicalReqs.length + index) * 0.05 }}
-                >
-                  <Card className="p-4 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        id={req.id}
-                        checked={req.userHas}
-                        onCheckedChange={() => toggleRequirement(req.id)}
-                        className="mt-1"
-                      />
-                      <div className="flex-1">
-                        <label htmlFor={req.id} className="font-medium cursor-pointer">
-                          {req.name}
-                        </label>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {req.description}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
+        <Card className="p-6 space-y-4">
+          <h3 className="font-semibold text-lg flex items-center gap-2 border-b pb-2">
+            <span className="text-2xl">🎒</span>
+            <div>
+              Physical Documents
+              <p className="text-xs font-normal text-muted-foreground">Must carry with you</p>
             </div>
+          </h3>
+          
+          <div className="space-y-2">
+            {physicalDocs.map((req, index) => (
+              <RequirementCard key={req.id} req={req} index={index} onToggle={toggleRequirement} />
+            ))}
           </div>
-        )}
+
+          {physicalDocs.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No additional physical documents required
+            </p>
+          )}
+        </Card>
+      </div>
+
+      {optionalReqs.length > 0 && (
+        <Card className="p-6 space-y-4 border-dashed">
+          <h3 className="font-semibold text-lg flex items-center gap-2">
+            <span className="text-2xl">⭐</span>
+            <div>
+              Optional (Recommended)
+              <p className="text-xs font-normal text-muted-foreground">
+                Not required but helpful for tourists
+              </p>
+            </div>
+          </h3>
+          
+          <div className="grid md:grid-cols-2 gap-3">
+            {optionalReqs.map((req, index) => (
+              <RequirementCard key={req.id} req={req} index={index} onToggle={toggleRequirement} optional />
+            ))}
+          </div>
+        </Card>
+      )}
+
+      <Card className="p-6 bg-muted/50">
+        <h3 className="font-semibold mb-4 flex items-center gap-2">
+          <Shield className="text-accent" />
+          Which of these do you already have?
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Check the boxes above for documents you already possess. We'll help you prepare the rest.
+        </p>
+        <div className="flex justify-between items-center gap-4">
+          <div className="text-sm">
+            <span className="font-semibold">
+              {requirements.filter(r => r.userHas).length}
+            </span>
+            <span className="text-muted-foreground"> / {requirements.length} checked</span>
+          </div>
+          <Button
+            size="lg"
+            onClick={() => onProceed(requirements)}
+            className="min-w-40"
+          >
+            Proceed to Payment
+          </Button>
+        </div>
       </Card>
-
-      <div className="flex justify-end">
-        <Button
-          size="lg"
-          onClick={() => onProceed(requirements)}
-          className="min-w-40"
-        >
-          Proceed to Payment
-        </Button>
-      </div>
 
       <Dialog open={showAffiliateDialog} onOpenChange={setShowAffiliateDialog}>
         <DialogContent className="max-w-md">
@@ -344,5 +313,65 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+interface RequirementCardProps {
+  req: TripRequirement
+  index: number
+  onToggle: (id: string) => void
+  optional?: boolean
+}
+
+function RequirementCard({ req, index, onToggle, optional }: RequirementCardProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.03 }}
+    >
+      <Card className={`p-3 hover:bg-muted/50 transition-colors ${optional ? 'border-dashed' : ''}`}>
+        <div className="flex items-start gap-3">
+          <Checkbox
+            id={req.id}
+            checked={req.userHas}
+            onCheckedChange={() => onToggle(req.id)}
+            className="mt-1"
+          />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <label htmlFor={req.id} className="font-medium cursor-pointer text-sm">
+                {req.name}
+              </label>
+              {req.deliveryType && (
+                <Badge variant="outline" className="text-xs shrink-0">
+                  {req.deliveryType}
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {req.description}
+            </p>
+            {req.tips && (
+              <p className="text-xs text-accent mt-1.5 italic">
+                💡 {req.tips}
+              </p>
+            )}
+            {req.officialUrl && (
+              <a
+                href={req.officialUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline flex items-center gap-1 mt-1.5"
+              >
+                <ArrowSquareOut size={12} />
+                {req.verifiedSource || 'Official Link'}
+                {req.verifiedSource && <ShieldCheck size={12} className="text-success" />}
+              </a>
+            )}
+          </div>
+        </div>
+      </Card>
+    </motion.div>
   )
 }
