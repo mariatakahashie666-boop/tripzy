@@ -60,11 +60,22 @@ export default function Hero({ onStart, onGuestMode }: HeroProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center space-y-3 md:space-y-4 mb-8 md:mb-12"
+          className="text-center space-y-3 md:space-y-4 mb-8 md:mb-12 relative"
         >
-          <div className="flex items-center justify-center mb-2 md:mb-3">
-            <Airplane className="text-accent mr-4" size={40} weight="duotone" />
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Tripzy</h1>
+          <div className="relative inline-block">
+            <Airplane 
+              className="absolute text-accent/20 -z-10" 
+              size={160} 
+              weight="duotone"
+              style={{
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)'
+              }}
+            />
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight relative z-10 px-8">
+              Tripzy
+            </h1>
           </div>
           
           <p className="text-lg md:text-xl text-accent/90 font-medium italic">
