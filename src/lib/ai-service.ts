@@ -274,25 +274,41 @@ export const analyzeRequirements = async (
   destination: string,
   nationality: string
 ): Promise<TripRequirement[]> => {
-  console.log('🔍 Analyzing requirements for:', { origin, destination, nationality })
+  console.log('🔍 Analyzing requirements for:')
+  console.log('  👤 Nationality:', nationality)
+  console.log('  📍 Departing from:', origin)
+  console.log('  ✈️ Going to:', destination)
+  console.log('')
+  console.log('⚠️ CRITICAL CHECK: Philippines eTravel Requirements')
+  const isDepartingFromPhilippines = origin.toLowerCase().includes('philippines') || origin.toLowerCase().includes('manila')
+  const isFilipino = nationality.toLowerCase().includes('philippines') || nationality.toLowerCase().includes('filipino')
+  console.log('  - Is departing from Philippines?', isDepartingFromPhilippines ? '✅ YES' : '❌ NO')
+  console.log('  - Is Filipino citizen?', isFilipino ? '✅ YES' : '❌ NO')
+  console.log('  - Should include PH eTravel?', (isDepartingFromPhilippines || isFilipino) ? '✅ YES - Required' : '❌ NO - Not required')
+  console.log('')
   
   // @ts-ignore - TypeScript has issues with template literals in certain contexts
   const prompt = window.spark.llmPrompt`You are a travel document requirements expert with access to current immigration regulations. Analyze the trip details and provide ALL required documents.
 
 TRIP DETAILS:
-- Origin: ${origin}
+- Traveler Nationality: ${nationality}
+- Current Location (Departure): ${origin}
 - Destination: ${destination}
-- Nationality: ${nationality}
 
 CRITICAL INSTRUCTIONS:
 1. **Research ACTUAL current requirements** - Don't make assumptions, use real immigration requirements
-2. Categorize each document:
+2. **ANALYZE ALL THREE FACTORS** before determining requirements:
+   - What is the traveler's NATIONALITY?
+   - Where is the traveler CURRENTLY (departure country)?
+   - Where is the traveler GOING (destination country)?
+
+3. Categorize each document:
    - "exit": Documents required by ORIGIN country to LEAVE (departure forms, exit permits)
    - "entry": Documents required by DESTINATION country to ENTER (arrival cards, visas, entry permits)
    - "physical": Physical documents that MUST be carried (passport, vaccination cards, tickets)
    - "optional": Recommended but NOT mandatory (travel insurance, tourist bookings)
 
-3. For each document specify:
+4. For each document specify:
    - deliveryType: "online" (can be submitted online/digital) OR "physical" (must physically carry)
    - country: Which country requires it
    - officialUrl: OFFICIAL government website URL (.gov/.gov.sg/.go.th domains)
@@ -301,31 +317,45 @@ CRITICAL INSTRUCTIONS:
 
 KNOWN REQUIREMENTS (USE THESE AS REFERENCE):
 
+PHILIPPINES eTravel Registration - IMPORTANT EXEMPTION RULES:
+⚠️ CRITICAL: Philippines eTravel is ONLY required for travelers who are CURRENTLY IN THE PHILIPPINES and DEPARTING FROM THE PHILIPPINES.
+- If traveler's nationality is NOT Filipino/Philippines AND departure country is NOT Philippines → DO NOT INCLUDE eTravel
+- If traveler's nationality is Filipino OR departure country is Philippines → INCLUDE eTravel
+- Examples:
+  ✓ Filipino departing from Manila to Bangkok → REQUIRES eTravel
+  ✓ American departing from Manila to Singapore → REQUIRES eTravel (currently in PH)
+  ✗ American departing from USA to Bangkok → NO eTravel needed
+  ✗ Thai departing from Bangkok to Singapore → NO eTravel needed
+  ✗ Any foreigner NOT in Philippines → NO eTravel needed
+
+When eTravel IS required:
+- Category: "exit"
+- DeliveryType: "online"
+- Submit within 72 hours before departure
+- URL: https://etravel.gov.ph
+- Source: Bureau of Immigration Philippines
+- Description: "Required online departure registration for all passengers departing from Philippines airports"
+
 SINGAPORE ENTRY:
-- Singapore Arrival Card (SG Arrival Card) - REQUIRED for ALL visitors
+- Singapore Arrival Card (SG Arrival Card) - REQUIRED for ALL visitors entering Singapore
   - Category: "entry"
   - DeliveryType: "online"
   - Submit up to 3 days before arrival
   - URL: https://eservices.ica.gov.sg/sgarrivalcard
   - Source: Immigration & Checkpoints Authority (ICA)
-
-PHILIPPINES EXIT:
-- eTravel Registration - REQUIRED for ALL departing passengers
-  - Category: "exit"
-  - DeliveryType: "online"
-  - Submit within 72 hours before departure
-  - URL: https://etravel.gov.ph
-  - Source: Bureau of Immigration
+  - Applies to ALL nationalities entering Singapore
 
 THAILAND ENTRY:
-- Thailand Arrival Card (TM.6) - REQUIRED
+- Thailand Arrival Card (TM.6) - REQUIRED for ALL visitors
   - Category: "entry"
   - DeliveryType: "physical"
   - Given on plane or at airport
   - URL: https://www.immigration.go.th
+  - Applies to ALL nationalities entering Thailand
 
 VISA REQUIREMENTS:
 - Check if nationality requires visa for destination
+- Consider visa-free agreements and duration
 - If visa-free, mention duration allowed
 - If visa required, specify type and application process
 
@@ -357,6 +387,8 @@ RETURN FORMAT (JSON only, no markdown):
 }
 
 IMPORTANT:
+- ALWAYS check nationality AND current location (departure) before including Philippines eTravel
+- Foreigners NOT in Philippines do NOT need Philippines eTravel
 - ALWAYS include the AI Travel Itinerary as the FIRST optional item with highlight: true and price: 1
 - If destination is Singapore, Thailand, etc., MUST include their specific entry requirements
 - deliveryType "online" means it can be submitted digitally (NOT just carrying digital copy)
@@ -388,28 +420,28 @@ Return ONLY valid JSON with the "requirements" array.`
     
   } catch (error) {
     console.error('❌ Error analyzing requirements:', error)
-    return getFallbackRequirements(origin, destination)
+    return getFallbackRequirements(origin, destination, nationality)
   }
 }
 
-const getFallbackRequirements = (origin: string, destination: string): TripRequirement[] => {
-  const isPhilippines = origin.toLowerCase().includes('philippines')
+const getFallbackRequirements = (origin: string, destination: string, nationality?: string): TripRequirement[] => {
+  const isDepartingFromPhilippines = origin.toLowerCase().includes('philippines') || origin.toLowerCase().includes('manila')
   const isSingapore = destination.toLowerCase().includes('singapore')
   const isThailand = destination.toLowerCase().includes('thailand')
   
   const requirements: TripRequirement[] = []
   
-  if (isPhilippines) {
+  if (isDepartingFromPhilippines) {
     requirements.push({
       id: 'ph-etravel',
       category: 'exit',
       name: 'eTravel Registration',
-      description: 'Required online departure registration for all travelers leaving Philippines',
+      description: 'Required online departure registration for all passengers departing from Philippines airports',
       deliveryType: 'online',
       country: 'Philippines',
       officialUrl: 'https://etravel.gov.ph',
       verifiedSource: 'Philippine Bureau of Immigration',
-      tips: 'Submit within 72 hours before departure. Immigration requirement for all departing passengers.',
+      tips: 'Submit within 72 hours before departure. Required for all passengers leaving the Philippines, regardless of nationality.',
       userHas: false
     })
   }

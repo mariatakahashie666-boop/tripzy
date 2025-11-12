@@ -27,11 +27,11 @@ A passport and flight ticket scanning tool that automatically identifies and pre
 **Success Criteria**: All critical fields extracted with 95%+ accuracy, names match passport exactly, users can edit any field, confidence score displayed, confirmation required before proceeding.
 
 ### Requirements Analysis & Checklist
-**Functionality**: AI determines required documents based on origin, destination, and nationality, then displays comprehensive checklist.
-**Purpose**: Show travelers exactly what they need, preventing surprises at the airport.
+**Functionality**: AI determines required documents based on origin, destination, and nationality, then displays comprehensive checklist. CRITICAL: AI must analyze all three factors (nationality, current location/departure, and destination) before determining requirements. For example, Philippines eTravel is ONLY required for passengers departing FROM the Philippines - foreigners traveling from other countries to third countries do NOT need Philippines eTravel.
+**Purpose**: Show travelers exactly what they need, preventing surprises at the airport and avoiding incorrect document requirements.
 **Trigger**: User confirms extracted data accuracy.
-**Progression**: System analyzes route → Display categorized checklist (Exit Documents, Entry Documents, Physical Requirements, Optional) → Show affiliate pop-ups (eSIM, hotel, tours) → User ticks what they already have → Click "Proceed to Payment"
-**Success Criteria**: Checklist accurately reflects country-specific requirements, users can mark items they possess, affiliate offers displayed contextually.
+**Progression**: AI analyzes nationality + origin + destination → Determines country-specific requirements based on departure point → Display categorized checklist (Exit Documents, Entry Documents, Physical Requirements, Optional) → Show affiliate pop-ups (eSIM, hotel, tours) → User ticks what they already have → Click "Proceed to Payment"
+**Success Criteria**: Checklist accurately reflects country-specific requirements based on all three factors (nationality, departure country, destination), users can mark items they possess, affiliate offers displayed contextually, no false requirements shown (e.g., no Philippines eTravel for non-Philippines departures).
 
 ### Payment Processing
 **Functionality**: Two-tier pricing (Standard $8-15 one-way, Premium $20 round-trip), multiple payment methods supported.
@@ -78,6 +78,7 @@ A passport and flight ticket scanning tool that automatically identifies and pre
 **Missing Required Fields** - Payment cannot proceed if critical fields (passport #, destination) couldn't be extracted
 **Payment Failures** - Retry logic with alternative payment methods, support contact provided, transaction rolled back safely
 **Unsupported Countries** - Shows "Requirements not available" message, offers manual research service, collects country request for future addition
+**Cross-Country Document Rules** - AI carefully validates requirements based on departure point, not just nationality. Example: US citizen flying Tokyo→Bangkok does NOT need Philippines eTravel (not departing from Philippines), but same person flying Manila→Bangkok DOES need it (departing from Philippines). AI checks: "Is traveler currently in/departing from the country that requires this document?"
 
 ## Design Direction
 
