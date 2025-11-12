@@ -346,6 +346,7 @@ function RequirementCard({ req, index, onToggle, optional, highlight }: Requirem
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}
     >
+      <Card className={`p-3 ${
         optional ? 'border-dashed' : ''
       } ${
         highlight 
@@ -362,20 +363,19 @@ function RequirementCard({ req, index, onToggle, optional, highlight }: Requirem
         )}
         <div className="flex items-start gap-3 relative z-10">
           <Checkbox
-          <Checkbox
             id={req.id}
             checked={req.userHas}
-            onCheckedChange={() => onToggle(req.id)}ccent' : ''}`}
+            onCheckedChange={() => onToggle(req.id)}
           />
-          />-0">
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
+              <label htmlFor={req.id} className={`font-medium cursor-pointer ${
                 highlight ? 'text-base' : 'text-sm'
               }`}>
                 {req.name}
-                {req.name}
               </label>
               <div className="flex items-center gap-1.5 shrink-0">
+                {req.price && (
                   <Badge variant="secondary" className="text-xs font-bold bg-accent/20 text-accent-foreground">
                     +${req.price}
                   </Badge>
@@ -387,31 +387,16 @@ function RequirementCard({ req, index, onToggle, optional, highlight }: Requirem
                 )}
               </div>
             </div>
-            </div>
             <p className={`text-muted-foreground mt-1 ${
               highlight ? 'text-sm font-medium' : 'text-xs'
-              {req.description}
+            }`}>
               {req.description}
             </p>
             {req.tips && (
               <p className={`text-accent mt-1.5 italic ${
                 highlight ? 'text-sm' : 'text-xs'
+              }`}>
                 💡 {req.tips}
-                💡 {req.tips}
-              </p>
-            )}
-            {req.officialUrl && (
-              <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1.5">
-                <ShieldCheck size={12} className="text-success" />
-                {req.verifiedSource ? `Verified by ${req.verifiedSource}` : 'Verified official source'}
-              </div>
-            )}
-          </div>
-        </div>
-      </Card>
-    </motion.div>
-  )
-}
               </p>
             )}
             {req.officialUrl && (
