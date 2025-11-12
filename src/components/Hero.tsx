@@ -60,18 +60,18 @@ export default function Hero({ onStart, onGuestMode }: HeroProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center space-y-4 md:space-y-6 mb-8 md:mb-12"
+          className="text-center space-y-3 md:space-y-4 mb-8 md:mb-12"
         >
-          <div className="flex items-center justify-center gap-3 mb-2 md:mb-4">
-            <Airplane className="text-accent" size={40} weight="duotone" />
+          <div className="flex items-center justify-center mb-2 md:mb-3">
+            <Airplane className="text-accent mr-4" size={40} weight="duotone" />
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Tripzy</h1>
           </div>
           
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-            Scan your passport and flight ticket. We'll handle all your travel documents.
+          <p className="text-lg md:text-xl text-accent/90 font-medium italic">
+            "Trip so Eazy"
           </p>
           
-          <p className="text-base md:text-lg text-foreground/70 max-w-xl mx-auto">
+          <p className="text-base md:text-lg text-foreground/70 max-w-xl mx-auto pt-2">
             Stop wasting hours filling forms and risking scam websites. Get verified, pre-filled documents in 10 minutes.
           </p>
         </motion.div>
@@ -81,40 +81,8 @@ export default function Hero({ onStart, onGuestMode }: HeroProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <Card className="p-6 md:p-8 space-y-4 md:space-y-6 shadow-lg">
-            <div className="grid md:grid-cols-3 gap-4 md:gap-6">
-              <div className="text-center space-y-2 md:space-y-3">
-                <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto">
-                  <Clock className="text-accent" size={24} weight="duotone" />
-                </div>
-                <h3 className="font-semibold">Save 3+ Hours</h3>
-                <p className="text-sm text-muted-foreground">
-                  10 minutes instead of hours researching requirements
-                </p>
-              </div>
-
-              <div className="text-center space-y-2 md:space-y-3">
-                <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mx-auto">
-                  <Shield className="text-success" size={24} weight="duotone" />
-                </div>
-                <h3 className="font-semibold">Scam Protection</h3>
-                <p className="text-sm text-muted-foreground">
-                  Only verified official government links
-                </p>
-              </div>
-
-              <div className="text-center space-y-2 md:space-y-3">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                  <CheckCircle className="text-primary" size={24} weight="duotone" />
-                </div>
-                <h3 className="font-semibold">You're In Control</h3>
-                <p className="text-sm text-muted-foreground">
-                  Review and submit forms yourself
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-6 border-t space-y-3">
+          <Card className="p-6 md:p-8 space-y-6 shadow-lg">
+            <div className="space-y-3">
               <div className="flex flex-col md:flex-row gap-3">
                 <Button
                   onClick={handleGuestMode}
@@ -138,8 +106,42 @@ export default function Hero({ onStart, onGuestMode }: HeroProps) {
                   </span>
                 </Button>
               </div>
+            </div>
+
+            <div className="pt-4 border-t">
+              <div className="grid md:grid-cols-3 gap-3 md:gap-4">
+                <div className="text-center space-y-1.5">
+                  <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center mx-auto">
+                    <Clock className="text-accent" size={20} weight="duotone" />
+                  </div>
+                  <h3 className="font-semibold text-sm">Save 3+ Hours</h3>
+                  <p className="text-xs text-muted-foreground">
+                    10 minutes instead of hours researching requirements
+                  </p>
+                </div>
+
+                <div className="text-center space-y-1.5">
+                  <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center mx-auto">
+                    <Shield className="text-success" size={20} weight="duotone" />
+                  </div>
+                  <h3 className="font-semibold text-sm">Scam Protection</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Only verified official government links
+                  </p>
+                </div>
+
+                <div className="text-center space-y-1.5">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                    <CheckCircle className="text-primary" size={20} weight="duotone" />
+                  </div>
+                  <h3 className="font-semibold text-sm">You're In Control</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Review and submit forms yourself
+                  </p>
+                </div>
+              </div>
               
-              <p className="text-center text-sm text-muted-foreground mt-4">
+              <p className="text-center text-sm text-muted-foreground mt-6">
                 From $5 per trip • No account required • 195+ countries
               </p>
             </div>
