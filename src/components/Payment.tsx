@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { TripRequirement, ExtractedData } from '@/types'
 import { CheckCircle, CreditCard } from '@phosphor-icons/react'
-import { detectPriceWithAI } from '@/lib/constants'
 import { motion } from 'framer-motion'
 
 interface PaymentProps {
@@ -93,80 +92,129 @@ const PAYMENT_METHODS = [
 export default function Payment({ requirements, extractedData, onPaymentComplete }: PaymentProps) {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('card')
   const [isProcessing, setIsProcessing] = useState(false)
-  const [detectedPrice, setDetectedPrice] = useState(5)
-
-  useEffect(() => {
-    const detectPrice = async () => {
-      const price = await detectPriceWithAI(requirements, extractedData)
-      setDetectedPrice(price)
-    }
-    detectPrice()
-  }, [requirements, extractedData])
+  const [selectedPlan, setSelectedPlan] = useState<'oneway' | 'roundtrip'>('oneway')
 
   const handlePayment = async () => {
     setIsProcessing(true)
     await new Promise(resolve => setTimeout(resolve, 2000))
-    onPaymentComplete(detectedPrice === 15 ? 'premium' : 'standard')
+    onPaymentComplete(selectedPlan === 'roundtrip' ? 'premium' : 'standard')
   }
 
-  const isRoundTrip = detectedPrice === 15
-  const features = isRoundTrip ? [
-    'Round-trip documents',
-    'Pre-filled forms (both ways)',
-    'Official government links',
-    'Saved for return trip',
-    'Priority support'
-  ] : [
+  const planPrice = selectedPlan === 'oneway' ? 5 : 8
+  const isRoundTrip = selectedPlan === 'roundtrip'
+  
+  const oneWayFeatures = [
     'One-way documents',
     'Pre-filled forms',
     'Official government links',
     'Data deleted after use'
   ]
+  
+  const roundTripFeatures = [
+    'Round-trip documents',
+    'Pre-filled forms (both ways)',
+    'Official government links',
+    'Saved for return trip',
+    'Auto-deleted after second flight'
+  ]
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6">
       <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold">Complete Your Payment</h2>
+        <h2 className="text-3xl font-bold">Choose Your Plan</h2>
         <p className="text-muted-foreground">
-          AI-detected pricing based on your trip requirements
+          Select the assistance package that fits your travel needs
         </p>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <Card className="p-6">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <h3 className="text-lg font-semibold">
-                  {isRoundTrip ? 'Round-trip Package' : 'One-way Package'}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {isRoundTrip ? 'Complete documentation for your journey' : 'Essential travel documents'}
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold">
-                  ${detectedPrice}
+      <div className="grid md:grid-cols-2 gap-4">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          onClick={() => setSelectedPlan('oneway')}
+        >
+          <Card className={`p-6 cursor-pointer transition-all hover:shadow-lg ${
+            selectedPlan === 'oneway' 
+              ? 'border-primary border-2 shadow-md' 
+              : 'border-border hover:border-primary/50'
+          }`}>
+            <div className="space-y-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-xl font-semibold">One-Way</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Essential travel assistance
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-3xl font-bold">$5</div>
                 </div>
               </div>
+              
+              <div className="pt-2">
+                <ul className="space-y-2">
+                  {oneWayFeatures.map((feature, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <CheckCircle 
+                        size={18} 
+                        className={`flex-shrink-0 mt-0.5 ${
+                          selectedPlan === 'oneway' ? 'text-primary' : 'text-muted-foreground'
+                        }`}
+                        weight="fill" 
+                      />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-            
-            <div className="pt-2">
-              <ul className="space-y-2">
-                {features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <CheckCircle size={18} className="text-success flex-shrink-0 mt-0.5" weight="fill" />
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          onClick={() => setSelectedPlan('roundtrip')}
+        >
+          <Card className={`p-6 cursor-pointer transition-all hover:shadow-lg ${
+            selectedPlan === 'roundtrip' 
+              ? 'border-primary border-2 shadow-md' 
+              : 'border-border hover:border-primary/50'
+          }`}>
+            <div className="space-y-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-xl font-semibold">Round-Trip</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Complete journey assistance
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-3xl font-bold">$8</div>
+                  <div className="text-xs text-success font-medium">Best Value</div>
+                </div>
+              </div>
+              
+              <div className="pt-2">
+                <ul className="space-y-2">
+                  {roundTripFeatures.map((feature, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <CheckCircle 
+                        size={18} 
+                        className={`flex-shrink-0 mt-0.5 ${
+                          selectedPlan === 'roundtrip' ? 'text-primary' : 'text-muted-foreground'
+                        }`}
+                        weight="fill" 
+                      />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-          </div>
-        </Card>
-      </motion.div>
+          </Card>
+        </motion.div>
+      </div>
 
       <Card className="p-5 space-y-4">
         <h3 className="font-semibold">Payment Method</h3>
@@ -242,7 +290,7 @@ export default function Payment({ requirements, extractedData, onPaymentComplete
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground font-medium">Total Amount</span>
           <span className="text-2xl font-bold">
-            ${detectedPrice}
+            ${planPrice}
           </span>
         </div>
       </Card>
@@ -260,7 +308,7 @@ export default function Payment({ requirements, extractedData, onPaymentComplete
               Processing...
             </div>
           ) : (
-            `Pay $${detectedPrice}`
+            `Pay $${planPrice}`
           )}
         </Button>
       </div>
