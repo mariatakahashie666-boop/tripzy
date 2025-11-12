@@ -115,13 +115,13 @@ export default function DocumentDelivery({ extractedData, requirements }: Docume
         { law: 'No eating/drinking in public transport (including Grab)', fine: 'SGD 500 fine' },
         { law: 'No jaywalking', fine: 'SGD 50 fine for first offense' },
         { law: 'No public intoxication', fine: 'Arrest and prosecution' },
-        { law: 'No drugs (zero tolerance)', fine: 'Death penalty for trafficking' },
+        { law: 'NO DRUGS: Oh I\'m sorry, every country actually has this law 😉', fine: 'Death penalty for trafficking' },
       ]
     } else if (isThailand) {
       return [
         { law: 'Do not disrespect monarchy or Buddha images', fine: 'Imprisonment' },
         { law: 'Dress modestly in temples', fine: 'May be denied entry' },
-        { law: 'No drugs', fine: 'Severe penalties including death' },
+        { law: 'NO DRUGS: Oh I\'m sorry, every country actually has this law 😉', fine: 'Severe penalties including death' },
         { law: 'Respect monks - women cannot touch', fine: 'Cultural offense' },
         { law: 'Do not step on Thai currency (has King\'s image)', fine: 'Jail time' },
       ]
@@ -131,7 +131,7 @@ export default function DocumentDelivery({ extractedData, requirements }: Docume
         { law: 'Remove shoes when entering homes/temples', fine: 'Major offense' },
         { law: 'No tipping (considered rude)', fine: 'Cultural offense' },
         { law: 'Dispose of trash properly - no public bins', fine: 'Take trash with you' },
-        { law: 'No drugs (including CBD products)', fine: 'Immediate deportation' },
+        { law: 'NO DRUGS: Oh I\'m sorry, every country actually has this law 😉 (including CBD products)', fine: 'Immediate deportation' },
       ]
     }
     return []
@@ -352,24 +352,24 @@ function CongratsPage({
         <p className="text-xl text-muted-foreground">Your documents are ready for {destination}</p>
       </motion.div>
 
-      <Card className="p-8 space-y-6 border-2 border-accent">
-        <div className="flex items-start gap-4">
-          <Warning size={32} className="text-accent shrink-0" weight="duotone" />
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Important Reminder</h2>
+      <Card className="p-4 border-2 border-accent max-w-2xl mx-auto">
+        <div className="flex items-start gap-3">
+          <Warning size={24} className="text-accent shrink-0 mt-0.5" weight="duotone" />
+          <div className="space-y-3">
+            <h2 className="text-lg font-bold">Important Reminder</h2>
             
             {countryName.toLowerCase().includes('singapore') && (
-              <div className="space-y-3">
-                <p className="text-base leading-relaxed">
+              <div className="space-y-2">
+                <p className="text-sm leading-relaxed">
                   <strong>Singapore is a strict country implementing rules without exemption.</strong> They have strict goals of keeping their country clean and safe. As a visitor, you must obey their laws and respect everyone. Better be careful and read their laws carefully.
                 </p>
                 
-                <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 space-y-2">
-                  <p className="font-semibold text-destructive flex items-center gap-2">
-                    <Warning size={20} />
+                <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 space-y-2">
+                  <p className="font-semibold text-destructive text-sm flex items-center gap-2">
+                    <Warning size={18} />
                     Key Laws to Remember:
                   </p>
-                  <ul className="space-y-1.5 text-sm">
+                  <ul className="space-y-1 text-xs">
                     <li>• <strong>Vapes are NOT allowed</strong> - can charge you up to SGD 2,000 (~PHP 90,000)</li>
                     <li>• <strong>Make sure you stand and walk on proper sides</strong></li>
                     <li>• <strong>Join the queues</strong> - cutting in line is offensive</li>
@@ -377,29 +377,29 @@ function CongratsPage({
                     <li>• <strong>No chewing gum</strong> (except medicinal)</li>
                     <li>• <strong>Foods and drinks NOT allowed in public transportation</strong> (Grab is no exemption)</li>
                     <li>• <strong>Do not smoke</strong> unless in specifically designated areas</li>
-                    <li>• <strong>No drugs</strong> - Zero tolerance policy</li>
+                    <li>• <strong>NO DRUGS:</strong> Oh I'm sorry, every country actually has this law 😉</li>
                   </ul>
                 </div>
               </div>
             )}
 
             {countryName.toLowerCase().includes('thailand') && (
-              <div className="space-y-3">
-                <p className="text-base leading-relaxed">
+              <div className="space-y-2">
+                <p className="text-sm leading-relaxed">
                   <strong>Thailand has strict cultural and legal rules.</strong> Show respect to the monarchy, Buddha images, and monks at all times.
                 </p>
                 
-                <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 space-y-2">
-                  <p className="font-semibold text-destructive flex items-center gap-2">
-                    <Warning size={20} />
+                <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 space-y-2">
+                  <p className="font-semibold text-destructive text-sm flex items-center gap-2">
+                    <Warning size={18} />
                     Key Laws to Remember:
                   </p>
-                  <ul className="space-y-1.5 text-sm">
+                  <ul className="space-y-1 text-xs">
                     <li>• <strong>Never disrespect monarchy or Buddha images</strong> - serious offense</li>
                     <li>• <strong>Dress modestly in temples</strong> - cover shoulders and knees</li>
                     <li>• <strong>Women cannot touch monks</strong></li>
                     <li>• <strong>Do not step on Thai currency</strong> (has King's image)</li>
-                    <li>• <strong>No drugs</strong> - severe penalties</li>
+                    <li>• <strong>NO DRUGS:</strong> Oh I'm sorry, every country actually has this law 😉</li>
                     <li>• <strong>Remove shoes before entering temples/homes</strong></li>
                   </ul>
                 </div>
@@ -407,7 +407,7 @@ function CongratsPage({
             )}
 
             {!countryName.toLowerCase().includes('singapore') && !countryName.toLowerCase().includes('thailand') && (
-              <p className="text-base leading-relaxed">
+              <p className="text-sm leading-relaxed">
                 Every country has its own laws and customs. Please research and respect the local laws of {countryName}. When in doubt, observe what locals do and follow their lead.
               </p>
             )}
