@@ -216,7 +216,7 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
             onClick={() => onProceed(requirements)}
             className="min-w-40"
           >
-            Proceed to Payment
+            Continue
           </Button>
         </div>
       </Card>

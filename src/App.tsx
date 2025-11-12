@@ -4,6 +4,7 @@ import Hero from '@/components/Hero'
 import DocumentUpload from '@/components/DocumentUpload'
 import DataVerification from '@/components/DataVerification'
 import RequirementsChecklist from '@/components/RequirementsChecklist'
+import NoOnlineDocuments from '@/components/NoOnlineDocuments'
 import Payment from '@/components/Payment'
 import DocumentDelivery from '@/components/DocumentDelivery'
 import ProgressStepper from '@/components/ProgressStepper'
@@ -24,6 +25,8 @@ function App() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null)
   const [requirements, setRequirements] = useState<TripRequirement[]>([])
+  const [showNoOnlineDocsScreen, setShowNoOnlineDocsScreen] = useState(false)
+  const [isOptionalServiceOnly, setIsOptionalServiceOnly] = useState(false)
 
   const handleStart = () => {
     setCurrentStep(1)
@@ -45,7 +48,26 @@ function App() {
 
   const handleRequirementsProceed = (reqs: TripRequirement[]) => {
     setRequirements(reqs)
+    
+    const onlineDocsNeeded = reqs.filter(r => 
+      (r.category === 'exit' || r.category === 'entry') && 
+      r.deliveryType === 'online' && 
+      !r.userHas
+    )
+    
+    const hasOnlineDocs = onlineDocsNeeded.length > 0
+    setShowNoOnlineDocsScreen(!hasOnlineDocs)
+    
     setCurrentStep(4)
+  }
+
+  const handleNoOnlineDocsProceed = (needsPayment: boolean) => {
+    if (needsPayment) {
+      setIsOptionalServiceOnly(true)
+      setShowNoOnlineDocsScreen(false)
+    } else {
+      setCurrentStep(5)
+    }
   }
 
   const handlePaymentComplete = (plan: 'standard' | 'premium') => {
@@ -72,8 +94,20 @@ function App() {
             {currentStep === 3 && extractedData && (
               <RequirementsChecklist extractedData={extractedData} onProceed={handleRequirementsProceed} />
             )}
-            {currentStep === 4 && requirements.length > 0 && (
-              <Payment requirements={requirements} extractedData={extractedData || undefined} onPaymentComplete={handlePaymentComplete} />
+            {currentStep === 4 && showNoOnlineDocsScreen && extractedData && requirements.length > 0 && (
+              <NoOnlineDocuments 
+                extractedData={extractedData} 
+                requirements={requirements} 
+                onProceed={handleNoOnlineDocsProceed} 
+              />
+            )}
+            {currentStep === 4 && !showNoOnlineDocsScreen && requirements.length > 0 && (
+              <Payment 
+                requirements={requirements} 
+                extractedData={extractedData || undefined} 
+                onPaymentComplete={handlePaymentComplete}
+                optionalServiceOnly={isOptionalServiceOnly}
+              />
             )}
             {currentStep === 5 && extractedData && requirements.length > 0 && (
               <DocumentDelivery extractedData={extractedData} requirements={requirements} />

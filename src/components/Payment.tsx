@@ -10,6 +10,7 @@ interface PaymentProps {
   requirements: TripRequirement[]
   extractedData?: ExtractedData
   onPaymentComplete: (plan: 'standard' | 'premium') => void
+  optionalServiceOnly?: boolean
 }
 
 const PAYMENT_METHODS = [
@@ -89,7 +90,7 @@ const PAYMENT_METHODS = [
   },
 ]
 
-export default function Payment({ requirements, extractedData, onPaymentComplete }: PaymentProps) {
+export default function Payment({ requirements, extractedData, onPaymentComplete, optionalServiceOnly = false }: PaymentProps) {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('card')
   const [isProcessing, setIsProcessing] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<'oneway' | 'roundtrip'>('oneway')
@@ -100,7 +101,7 @@ export default function Payment({ requirements, extractedData, onPaymentComplete
     onPaymentComplete(selectedPlan === 'roundtrip' ? 'premium' : 'standard')
   }
 
-  const planPrice = selectedPlan === 'oneway' ? 5 : 8
+  const planPrice = optionalServiceOnly ? 2 : (selectedPlan === 'oneway' ? 5 : 8)
   const isRoundTrip = selectedPlan === 'roundtrip'
   
   const oneWayFeatures = [
@@ -121,88 +122,93 @@ export default function Payment({ requirements, extractedData, onPaymentComplete
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6">
       <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold">Choose Your Plan</h2>
+        <h2 className="text-3xl font-bold">{optionalServiceOnly ? 'Payment for Optional Services' : 'Choose Your Plan'}</h2>
         <p className="text-muted-foreground">
-          Select the assistance package that fits your travel needs
+          {optionalServiceOnly 
+            ? 'Complete your payment for the selected optional services'
+            : 'Select the assistance package that fits your travel needs'
+          }
         </p>
       </div>
 
-      <div className="flex gap-3 justify-center">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          onClick={() => setSelectedPlan('oneway')}
-          className="w-40"
-        >
-          <Card className={`p-3 cursor-pointer transition-all hover:shadow-lg ${
-            selectedPlan === 'oneway' 
-              ? 'border-primary border-2 shadow-md' 
-              : 'border-border hover:border-primary/50'
-          }`}>
-            <div className="space-y-2 text-center">
-              <div className="space-y-0.5">
-                <h3 className="text-base font-semibold">One-Way</h3>
-                <div className="text-2xl font-bold">$5</div>
+      {!optionalServiceOnly && (
+        <div className="flex gap-3 justify-center">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            onClick={() => setSelectedPlan('oneway')}
+            className="w-40"
+          >
+            <Card className={`p-3 cursor-pointer transition-all hover:shadow-lg ${
+              selectedPlan === 'oneway' 
+                ? 'border-primary border-2 shadow-md' 
+                : 'border-border hover:border-primary/50'
+            }`}>
+              <div className="space-y-2 text-center">
+                <div className="space-y-0.5">
+                  <h3 className="text-base font-semibold">One-Way</h3>
+                  <div className="text-2xl font-bold">$5</div>
+                </div>
+                
+                <div className="pt-1 border-t">
+                  <ul className="space-y-1 text-left">
+                    {oneWayFeatures.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-1.5">
+                        <CheckCircle 
+                          size={14} 
+                          className={`flex-shrink-0 mt-0.5 ${
+                            selectedPlan === 'oneway' ? 'text-primary' : 'text-muted-foreground'
+                          }`}
+                          weight="fill" 
+                        />
+                        <span className="text-xs leading-tight">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-              
-              <div className="pt-1 border-t">
-                <ul className="space-y-1 text-left">
-                  {oneWayFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-1.5">
-                      <CheckCircle 
-                        size={14} 
-                        className={`flex-shrink-0 mt-0.5 ${
-                          selectedPlan === 'oneway' ? 'text-primary' : 'text-muted-foreground'
-                        }`}
-                        weight="fill" 
-                      />
-                      <span className="text-xs leading-tight">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
+            </Card>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          onClick={() => setSelectedPlan('roundtrip')}
-          className="w-40"
-        >
-          <Card className={`p-3 cursor-pointer transition-all hover:shadow-lg ${
-            selectedPlan === 'roundtrip' 
-              ? 'border-primary border-2 shadow-md' 
-              : 'border-border hover:border-primary/50'
-          }`}>
-            <div className="space-y-2 text-center">
-              <div className="space-y-0.5">
-                <h3 className="text-base font-semibold">Round-Trip</h3>
-                <div className="text-2xl font-bold">$8</div>
-                <div className="text-[10px] text-success font-medium">Best Value</div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            onClick={() => setSelectedPlan('roundtrip')}
+            className="w-40"
+          >
+            <Card className={`p-3 cursor-pointer transition-all hover:shadow-lg ${
+              selectedPlan === 'roundtrip' 
+                ? 'border-primary border-2 shadow-md' 
+                : 'border-border hover:border-primary/50'
+            }`}>
+              <div className="space-y-2 text-center">
+                <div className="space-y-0.5">
+                  <h3 className="text-base font-semibold">Round-Trip</h3>
+                  <div className="text-2xl font-bold">$8</div>
+                  <div className="text-[10px] text-success font-medium">Best Value</div>
+                </div>
+                
+                <div className="pt-1 border-t">
+                  <ul className="space-y-1 text-left">
+                    {roundTripFeatures.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-1.5">
+                        <CheckCircle 
+                          size={14} 
+                          className={`flex-shrink-0 mt-0.5 ${
+                            selectedPlan === 'roundtrip' ? 'text-primary' : 'text-muted-foreground'
+                          }`}
+                          weight="fill" 
+                        />
+                        <span className="text-xs leading-tight">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-              
-              <div className="pt-1 border-t">
-                <ul className="space-y-1 text-left">
-                  {roundTripFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-1.5">
-                      <CheckCircle 
-                        size={14} 
-                        className={`flex-shrink-0 mt-0.5 ${
-                          selectedPlan === 'roundtrip' ? 'text-primary' : 'text-muted-foreground'
-                        }`}
-                        weight="fill" 
-                      />
-                      <span className="text-xs leading-tight">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-      </div>
+            </Card>
+          </motion.div>
+        </div>
+      )}
 
       <Card className="p-5 space-y-4">
         <h3 className="font-semibold">Payment Method</h3>
