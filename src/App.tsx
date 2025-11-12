@@ -8,6 +8,7 @@ import Payment from '@/components/Payment'
 import DocumentDelivery from '@/components/DocumentDelivery'
 import ProgressStepper from '@/components/ProgressStepper'
 import DeviceIndicator from '@/components/DeviceIndicator'
+import ThemeToggle from '@/components/ThemeToggle'
 import { ExtractedData, TripRequirement } from '@/types'
 
 const STEPS = [
@@ -53,6 +54,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background">
+      <ThemeToggle />
       <DeviceIndicator />
       {currentStep === 0 && <Hero onStart={handleStart} onGuestMode={handleGuestMode} />}
       
