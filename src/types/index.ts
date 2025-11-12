@@ -42,6 +42,8 @@ export interface TripRequirement {
   officialUrl?: string
   verifiedSource?: string
   tips?: string
+  price?: number
+  highlight?: boolean
 }
 
 export interface Trip {

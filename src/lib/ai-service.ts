@@ -342,11 +342,22 @@ RETURN FORMAT (JSON only, no markdown):
       "officialUrl": "https://eservices.ica.gov.sg/sgarrivalcard",
       "verifiedSource": "Immigration & Checkpoints Authority (ICA)",
       "tips": "Submit up to 3 days before arrival. Save the QR code to show at immigration."
+    },
+    {
+      "id": "ai-itinerary",
+      "category": "optional",
+      "name": "🤖 AI Travel Itinerary & Local Guide",
+      "description": "Get personalized restaurant recommendations, must-visit places, local cuisine guide, and must-do activities for your destination",
+      "deliveryType": "online",
+      "tips": "AI-powered suggestions based on your destination. Includes best restaurants, hidden gems, local foods to try, and cultural experiences.",
+      "price": 1,
+      "highlight": true
     }
   ]
 }
 
 IMPORTANT:
+- ALWAYS include the AI Travel Itinerary as the FIRST optional item with highlight: true and price: 1
 - If destination is Singapore, Thailand, etc., MUST include their specific entry requirements
 - deliveryType "online" means it can be submitted digitally (NOT just carrying digital copy)
 - Physical documents that travelers already have (passport, tickets) should be category "physical"
@@ -456,20 +467,18 @@ const getFallbackRequirements = (origin: string, destination: string): TripRequi
     }
   )
   
-  if (isSingapore) {
-    requirements.push({
-      id: 'sg-river-cruise',
-      category: 'optional',
-      name: 'Singapore River Cruise',
-      description: 'Popular tourist attraction with online booking discounts',
-      deliveryType: 'online',
-      officialUrl: 'https://www.rivercruise.com.sg',
-      tips: 'Book online for discounts compared to walk-in rates.',
-      userHas: false
-    })
-  }
-  
   requirements.push(
+    {
+      id: 'ai-itinerary',
+      category: 'optional',
+      name: '🤖 AI Travel Itinerary & Local Guide',
+      description: 'Get personalized restaurant recommendations, must-visit places, local cuisine guide, and must-do activities for your destination',
+      deliveryType: 'online',
+      tips: 'AI-powered suggestions based on your destination. Includes best restaurants, hidden gems, local foods to try, and cultural experiences.',
+      userHas: false,
+      price: 1,
+      highlight: true
+    },
     {
       id: 'vaccination-card',
       category: 'physical',
@@ -546,4 +555,88 @@ const getOfficialUrl = (docId: string): string => {
     'th-declaration': 'https://immigration.go.th'
   }
   return urls[docId] || 'https://gov.example'
+}
+
+export const generateItinerary = async (destination: string): Promise<{
+  restaurants: Array<{ name: string; cuisine: string; description: string; mustTry: string }>
+  attractions: Array<{ name: string; category: string; description: string; tip: string }>
+  foods: Array<{ name: string; description: string; where: string }>
+  mustDo: Array<{ activity: string; description: string; bestTime: string }>
+}> => {
+  console.log('🗺️ Generating AI itinerary for:', destination)
+  
+  // @ts-ignore - TypeScript has issues with template literals in certain contexts
+  const prompt = window.spark.llmPrompt`You are an expert travel guide with deep knowledge of local culture, cuisine, and hidden gems. Create a comprehensive travel itinerary for ${destination}.
+
+DESTINATION: ${destination}
+
+GENERATE:
+
+1. **Top 5 Restaurants** (mix of famous and local favorites):
+   - Name, cuisine type, what makes it special
+   - Must-try dish at each restaurant
+
+2. **Top 5 Places to Visit** (mix of popular and hidden gems):
+   - Name, category (cultural/nature/shopping/etc)
+   - Why it's worth visiting
+   - Insider tip
+
+3. **Top 5 Local Foods to Try**:
+   - Dish name, description
+   - Where to find it (street food/restaurants/markets)
+
+4. **Top 5 Must-Do Activities**:
+   - Activity name and description
+   - Best time to do it
+
+RETURN FORMAT (JSON only):
+{
+  "restaurants": [
+    {
+      "name": "Restaurant Name",
+      "cuisine": "Cuisine Type",
+      "description": "What makes it special",
+      "mustTry": "Signature dish"
+    }
+  ],
+  "attractions": [
+    {
+      "name": "Place Name",
+      "category": "Category",
+      "description": "Why visit",
+      "tip": "Insider tip"
+    }
+  ],
+  "foods": [
+    {
+      "name": "Food Name",
+      "description": "What it is",
+      "where": "Where to find it"
+    }
+  ],
+  "mustDo": [
+    {
+      "activity": "Activity Name",
+      "description": "What to do",
+      "bestTime": "When to do it"
+    }
+  ]
+}
+
+Make recommendations authentic, practical, and exciting!`
+
+  try {
+    const response = await window.spark.llm(prompt, "gpt-4o", true)
+    const parsed = JSON.parse(response)
+    console.log('✅ Itinerary generated successfully')
+    return parsed
+  } catch (error) {
+    console.error('❌ Error generating itinerary:', error)
+    return {
+      restaurants: [],
+      attractions: [],
+      foods: [],
+      mustDo: []
+    }
+  }
 }

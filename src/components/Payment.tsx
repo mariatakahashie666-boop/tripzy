@@ -101,7 +101,12 @@ export default function Payment({ requirements, extractedData, onPaymentComplete
     onPaymentComplete(selectedPlan === 'roundtrip' ? 'premium' : 'standard')
   }
 
-  const planPrice = optionalServiceOnly ? 2 : (selectedPlan === 'oneway' ? 5 : 8)
+  const optionalItemsPrice = requirements
+    .filter(req => req.category === 'optional' && req.userHas && req.price)
+    .reduce((sum, req) => sum + (req.price || 0), 0)
+
+  const basePlanPrice = optionalServiceOnly ? 0 : (selectedPlan === 'oneway' ? 5 : 8)
+  const planPrice = basePlanPrice + optionalItemsPrice
   const isRoundTrip = selectedPlan === 'roundtrip'
   
   const oneWayFeatures = [
@@ -280,7 +285,36 @@ export default function Payment({ requirements, extractedData, onPaymentComplete
         </motion.div>
       )}
 
-      <Card className="p-4 bg-muted/30">
+      <Card className="p-4 bg-muted/30 space-y-2">
+        {!optionalServiceOnly && basePlanPrice > 0 && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">
+              {selectedPlan === 'oneway' ? 'One-Way' : 'Round-Trip'} Plan
+            </span>
+            <span className="font-semibold">${basePlanPrice}</span>
+          </div>
+        )}
+        
+        {optionalItemsPrice > 0 && (
+          <>
+            {requirements
+              .filter(req => req.category === 'optional' && req.userHas && req.price)
+              .map(req => (
+                <div key={req.id} className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <span className="text-xs">✨</span>
+                    {req.name.replace(/🤖\s*/, '')}
+                  </span>
+                  <span className="font-semibold text-accent">+${req.price}</span>
+                </div>
+              ))
+            }
+            {!optionalServiceOnly && basePlanPrice > 0 && (
+              <div className="border-t pt-2" />
+            )}
+          </>
+        )}
+        
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground font-medium">Total Amount</span>
           <span className="text-2xl font-bold">

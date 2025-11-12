@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { ExtractedData, TripRequirement, TravelDocument } from '@/types'
-import { FilePdf, ArrowSquareOut, Warning, CheckCircle, ShieldCheck, Trash } from '@phosphor-icons/react'
+import { FilePdf, ArrowSquareOut, Warning, CheckCircle, ShieldCheck, Trash, MapTrifold, ForkKnife, Sparkle } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
-import { generateDocuments } from '@/lib/ai-service'
+import { generateDocuments, generateItinerary } from '@/lib/ai-service'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { useKV } from '@github/spark/hooks'
 
@@ -24,8 +24,13 @@ export default function DocumentDelivery({ extractedData, requirements, hasPaid 
   const [showLawsDialog, setShowLawsDialog] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [wantsLaws, setWantsLaws] = useState<boolean | null>(null)
+  const [itinerary, setItinerary] = useState<any>(null)
+  const [isGeneratingItinerary, setIsGeneratingItinerary] = useState(false)
+  const [showItinerary, setShowItinerary] = useState(false)
   
   const [userData] = useKV<any>('user-travel-data', undefined)
+
+  const hasItineraryOption = requirements.some(req => req.id === 'ai-itinerary' && req.userHas)
 
   useEffect(() => {
     const generate = async () => {
@@ -33,9 +38,16 @@ export default function DocumentDelivery({ extractedData, requirements, hasPaid 
       const docs = await generateDocuments(extractedData, requirements)
       setDocuments(docs)
       setIsGenerating(false)
+      
+      if (hasItineraryOption && hasPaid) {
+        setIsGeneratingItinerary(true)
+        const itineraryData = await generateItinerary(extractedData.destination)
+        setItinerary(itineraryData)
+        setIsGeneratingItinerary(false)
+      }
     }
     generate()
-  }, [extractedData, requirements])
+  }, [extractedData, requirements, hasItineraryOption, hasPaid])
 
   const toggleCompleted = (docId: string) => {
     setCompletedDocs(prev => {
@@ -269,6 +281,62 @@ export default function DocumentDelivery({ extractedData, requirements, hasPaid 
         ))}
       </div>
 
+      {hasItineraryOption && hasPaid && (
+        <Card className="p-6 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent border-accent border-2">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Sparkle size={28} className="text-accent" weight="duotone" />
+                <div>
+                  <h3 className="text-xl font-bold">Your AI Travel Itinerary</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Personalized recommendations for {extractedData.destination}
+                  </p>
+                </div>
+              </div>
+              {!isGeneratingItinerary && itinerary && (
+                <Button onClick={() => setShowItinerary(true)} className="bg-accent hover:bg-accent/90">
+                  View Guide
+                </Button>
+              )}
+            </div>
+            
+            {isGeneratingItinerary && (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-center space-y-3">
+                  <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-sm font-medium">Generating your personalized itinerary...</p>
+                </div>
+              </div>
+            )}
+            
+            {!isGeneratingItinerary && itinerary && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-card p-4 rounded-lg border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ForkKnife size={20} className="text-accent" />
+                    <h4 className="font-semibold">Restaurants & Food</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {itinerary.restaurants?.length || 0} restaurants + {itinerary.foods?.length || 0} local dishes
+                  </p>
+                </div>
+                
+                <div className="bg-card p-4 rounded-lg border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MapTrifold size={20} className="text-accent" />
+                    <h4 className="font-semibold">Places & Activities</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {itinerary.attractions?.length || 0} attractions + {itinerary.mustDo?.length || 0} activities
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
       <Card className="p-6 bg-primary/5 border-primary">
         <div className="space-y-4">
           <h3 className="font-semibold text-lg">Next Steps:</h3>
@@ -326,6 +394,122 @@ export default function DocumentDelivery({ extractedData, requirements, hasPaid 
           </Card>
         </motion.div>
       )}
+
+      <Dialog open={showItinerary} onOpenChange={setShowItinerary}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              <Sparkle className="text-accent" weight="duotone" />
+              Your AI Travel Guide for {extractedData.destination}
+            </DialogTitle>
+            <DialogDescription>
+              Curated recommendations from AI based on local insights
+            </DialogDescription>
+          </DialogHeader>
+          
+          {itinerary && (
+            <div className="space-y-6 py-4">
+              <div>
+                <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+                  <ForkKnife className="text-accent" />
+                  Top Restaurants
+                </h3>
+                <div className="space-y-3">
+                  {itinerary.restaurants?.map((restaurant: any, index: number) => (
+                    <Card key={index} className="p-4">
+                      <div className="flex gap-3">
+                        <Badge className="shrink-0 h-6">{index + 1}</Badge>
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{restaurant.name}</h4>
+                          <p className="text-sm text-muted-foreground mt-1">{restaurant.cuisine}</p>
+                          <p className="text-sm mt-2">{restaurant.description}</p>
+                          <p className="text-sm text-accent font-medium mt-2">
+                            🍽️ Must Try: {restaurant.mustTry}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+                  <MapTrifold className="text-accent" />
+                  Must-Visit Places
+                </h3>
+                <div className="space-y-3">
+                  {itinerary.attractions?.map((place: any, index: number) => (
+                    <Card key={index} className="p-4">
+                      <div className="flex gap-3">
+                        <Badge className="shrink-0 h-6">{index + 1}</Badge>
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <h4 className="font-semibold">{place.name}</h4>
+                            <Badge variant="outline" className="text-xs">{place.category}</Badge>
+                          </div>
+                          <p className="text-sm mt-2">{place.description}</p>
+                          <p className="text-sm text-accent font-medium mt-2">
+                            💡 Tip: {place.tip}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+                  🍜 Local Foods to Try
+                </h3>
+                <div className="space-y-3">
+                  {itinerary.foods?.map((food: any, index: number) => (
+                    <Card key={index} className="p-4">
+                      <div className="flex gap-3">
+                        <Badge className="shrink-0 h-6">{index + 1}</Badge>
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{food.name}</h4>
+                          <p className="text-sm mt-1">{food.description}</p>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            📍 Where: {food.where}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+                  ✨ Must-Do Activities
+                </h3>
+                <div className="space-y-3">
+                  {itinerary.mustDo?.map((activity: any, index: number) => (
+                    <Card key={index} className="p-4">
+                      <div className="flex gap-3">
+                        <Badge className="shrink-0 h-6">{index + 1}</Badge>
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{activity.activity}</h4>
+                          <p className="text-sm mt-1">{activity.description}</p>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            🕐 Best Time: {activity.bestTime}
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <Button onClick={() => setShowItinerary(false)} className="w-full">
+            Close Guide
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

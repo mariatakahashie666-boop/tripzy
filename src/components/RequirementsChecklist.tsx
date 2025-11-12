@@ -188,10 +188,16 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
             </div>
           </h3>
           
-          <div className="grid md:grid-cols-2 gap-3">
-            {optionalReqs.map((req, index) => (
-              <RequirementCard key={req.id} req={req} index={index} onToggle={toggleRequirement} optional />
+          <div className="space-y-3">
+            {optionalReqs.filter(r => r.highlight).map((req, index) => (
+              <RequirementCard key={req.id} req={req} index={index} onToggle={toggleRequirement} optional highlight />
             ))}
+            
+            <div className="grid md:grid-cols-2 gap-3">
+              {optionalReqs.filter(r => !r.highlight).map((req, index) => (
+                <RequirementCard key={req.id} req={req} index={index} onToggle={toggleRequirement} optional />
+              ))}
+            </div>
           </div>
         </Card>
       )}
@@ -330,39 +336,67 @@ interface RequirementCardProps {
   index: number
   onToggle: (id: string) => void
   optional?: boolean
+  highlight?: boolean
 }
 
-function RequirementCard({ req, index, onToggle, optional }: RequirementCardProps) {
+function RequirementCard({ req, index, onToggle, optional, highlight }: RequirementCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03 }}
     >
-      <Card className={`p-3 hover:bg-muted/50 transition-colors ${optional ? 'border-dashed' : ''}`}>
-        <div className="flex items-start gap-3">
+      <Card className={`p-3 hover:bg-muted/50 transition-all ${
+        optional ? 'border-dashed' : ''
+      } ${
+        highlight 
+          ? 'border-accent border-2 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent shadow-lg hover:shadow-xl relative overflow-hidden' 
+          : ''
+      }`}>
+        {highlight && (
+          <>
+            <div className="absolute top-0 right-0 bg-accent text-accent-foreground text-[10px] font-bold px-2 py-0.5 rounded-bl-md">
+              POPULAR
+            </div>
+            <div className="absolute -right-8 -top-8 w-24 h-24 bg-accent/10 rounded-full blur-2xl" />
+          </>
+        )}
+        <div className="flex items-start gap-3 relative z-10">
           <Checkbox
             id={req.id}
             checked={req.userHas}
             onCheckedChange={() => onToggle(req.id)}
-            className="mt-1"
+            className={`mt-1 ${highlight ? 'border-accent data-[state=checked]:bg-accent' : ''}`}
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <label htmlFor={req.id} className="font-medium cursor-pointer text-sm">
+              <label htmlFor={req.id} className={`font-medium cursor-pointer ${
+                highlight ? 'text-base' : 'text-sm'
+              }`}>
                 {req.name}
               </label>
-              {req.deliveryType && (
-                <Badge variant="outline" className="text-xs shrink-0">
-                  {req.deliveryType}
-                </Badge>
-              )}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {req.price !== undefined && (
+                  <Badge variant="secondary" className="text-xs font-bold bg-accent/20 text-accent-foreground">
+                    +${req.price}
+                  </Badge>
+                )}
+                {req.deliveryType && !highlight && (
+                  <Badge variant="outline" className="text-xs shrink-0">
+                    {req.deliveryType}
+                  </Badge>
+                )}
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className={`text-muted-foreground mt-1 ${
+              highlight ? 'text-sm font-medium' : 'text-xs'
+            }`}>
               {req.description}
             </p>
             {req.tips && (
-              <p className="text-xs text-accent mt-1.5 italic">
+              <p className={`text-accent mt-1.5 italic ${
+                highlight ? 'text-sm' : 'text-xs'
+              }`}>
                 💡 {req.tips}
               </p>
             )}
