@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ExtractedData } from '@/types'
-import { Warning, CheckCircle, PencilSimple } from '@phosphor-icons/react'
+import { Warning, CheckCircle, PencilSimple, DeviceMobile, Desktop } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import { simulateDocumentExtraction } from '@/lib/ai-service'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 interface DataVerificationProps {
   files: File[]
@@ -14,6 +15,7 @@ interface DataVerificationProps {
 }
 
 export default function DataVerification({ files, onVerified }: DataVerificationProps) {
+  const isMobile = useIsMobile()
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [editedData, setEditedData] = useState<Partial<ExtractedData>>({})
@@ -83,8 +85,14 @@ export default function DataVerification({ files, onVerified }: DataVerification
         <h2 className="text-3xl font-bold">Verify Your Information</h2>
         <div className="flex items-center justify-center gap-2 text-muted-foreground">
           <Warning size={20} className="text-accent" />
-          <p className="font-medium">Please check very carefully as this will be used for your documents 😇</p>
+          <p className="font-medium">Please check {isMobile ? 'carefully' : 'very carefully'} as this will be used for your documents 😇</p>
         </div>
+        {isMobile && (
+          <p className="text-xs text-accent flex items-center justify-center gap-1">
+            <DeviceMobile size={16} weight="duotone" />
+            Mobile layout optimized for easy editing
+          </p>
+        )}
       </div>
 
       {noDataExtracted && (

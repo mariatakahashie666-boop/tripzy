@@ -1,9 +1,10 @@
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Airplane, Shield, Clock, CheckCircle, LockKey } from '@phosphor-icons/react'
+import { Airplane, Shield, Clock, CheckCircle, LockKey, DeviceMobile, Desktop } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 interface HeroProps {
   onStart: () => void
@@ -21,6 +22,13 @@ const GoogleLogo = () => (
 
 export default function Hero({ onStart, onGuestMode }: HeroProps) {
   const [isAuthenticating, setIsAuthenticating] = useState(false)
+  const isMobile = useIsMobile()
+  const [showDeviceDetection, setShowDeviceDetection] = useState(true)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowDeviceDetection(false), 5000)
+    return () => clearTimeout(timer)
+  }, [])
 
   const handleGoogleSignIn = async () => {
     setIsAuthenticating(true)
@@ -142,9 +150,30 @@ export default function Hero({ onStart, onGuestMode }: HeroProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-8 text-center text-sm text-muted-foreground"
+          className="mt-8 text-center text-sm text-muted-foreground space-y-3"
         >
           <p>🔒 Your data is encrypted and deleted after use</p>
+          
+          {showDeviceDetection && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center justify-center gap-2 text-accent font-medium"
+            >
+              {isMobile ? (
+                <>
+                  <DeviceMobile size={20} weight="duotone" />
+                  <span>Mobile device detected - Camera scanning optimized</span>
+                </>
+              ) : (
+                <>
+                  <Desktop size={20} weight="duotone" />
+                  <span>Desktop detected - File upload optimized</span>
+                </>
+              )}
+            </motion.div>
+          )}
         </motion.div>
       </div>
     </div>

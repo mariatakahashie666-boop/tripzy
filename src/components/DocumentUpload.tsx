@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CloudArrowUp, File, X, Eye, Warning, CheckCircle, Pencil, Camera } from '@phosphor-icons/react'
+import { CloudArrowUp, File, X, Eye, Warning, CheckCircle, Pencil, Camera, DeviceMobile, Desktop } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { ExtractedData } from '@/types'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 interface DocumentUploadProps {
   onUploadComplete: (files: File[]) => void
@@ -18,6 +19,7 @@ interface FileWithPreview extends File {
 }
 
 export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
+  const isMobile = useIsMobile()
   const [files, setFiles] = useState<FileWithPreview[]>([])
   const [dragActive, setDragActive] = useState(false)
   const [passportUploaded, setPassportUploaded] = useState(false)
@@ -170,11 +172,23 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-bold">Upload Your Documents</h2>
         <p className="text-muted-foreground">
-          Scan with camera or upload images of your passport and flight ticket
+          {isMobile 
+            ? 'Use your camera to scan your passport and flight ticket' 
+            : 'Upload images of your passport and flight ticket from your computer'}
         </p>
-        <p className="text-xs text-muted-foreground">
-          📱 Mobile users: Camera will open automatically • 💻 Desktop: Choose files from computer
-        </p>
+        <div className="flex items-center justify-center gap-2 text-sm">
+          {isMobile ? (
+            <div className="flex items-center gap-2 text-accent font-medium">
+              <DeviceMobile size={18} weight="duotone" />
+              <span>Mobile mode - Camera optimized</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-accent font-medium">
+              <Desktop size={18} weight="duotone" />
+              <span>Desktop mode - File upload ready</span>
+            </div>
+          )}
+        </div>
       </div>
 
       <Card className="p-6 bg-muted/30 border-2">
@@ -219,7 +233,7 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
               type="file"
               id="passport-upload"
               accept="image/*"
-              capture="environment"
+              capture={isMobile ? "environment" : undefined}
               className="hidden"
               onChange={(e) => handleFileChange(e, 'passport')}
             />
@@ -229,7 +243,9 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
               onClick={() => document.getElementById('passport-upload')?.click()}
             >
               <Camera className="mr-2" size={20} />
-              {passportUploaded ? 'Change Passport' : 'Scan/Upload Passport'}
+              {isMobile 
+                ? (passportUploaded ? 'Retake Photo' : 'Open Camera') 
+                : (passportUploaded ? 'Change Passport' : 'Upload Passport')}
             </Button>
           </div>
         </Card>
@@ -251,8 +267,8 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
             <input
               type="file"
               id="ticket-upload"
-              accept="image/*,application/pdf"
-              capture="environment"
+              accept={isMobile ? "image/*" : "image/*,application/pdf"}
+              capture={isMobile ? "environment" : undefined}
               className="hidden"
               onChange={(e) => handleFileChange(e, 'ticket')}
             />
@@ -262,7 +278,9 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
               onClick={() => document.getElementById('ticket-upload')?.click()}
             >
               <Camera className="mr-2" size={20} />
-              {ticketUploaded ? 'Change Ticket' : 'Scan/Upload Ticket'}
+              {isMobile 
+                ? (ticketUploaded ? 'Retake Photo' : 'Open Camera') 
+                : (ticketUploaded ? 'Change Ticket' : 'Upload Ticket')}
             </Button>
           </div>
         </Card>
@@ -282,7 +300,7 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
         <div className="text-center space-y-4">
           <CloudArrowUp className="mx-auto text-muted-foreground" size={48} weight="duotone" />
           <div>
-            <p className="font-medium">Optional: Scan or Upload More Documents</p>
+            <p className="font-medium">Optional: {isMobile ? 'Scan' : 'Upload'} More Documents</p>
             <p className="text-sm text-muted-foreground mt-1">
               Hotel booking, bank statement, etc. (up to 3 more)
             </p>
@@ -290,14 +308,14 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
           <input
             type="file"
             id="additional-upload"
-            accept="image/*,application/pdf"
-            capture="environment"
+            accept={isMobile ? "image/*" : "image/*,application/pdf"}
+            capture={isMobile ? "environment" : undefined}
             multiple
             className="hidden"
             onChange={(e) => handleFileChange(e, 'additional')}
           />
           <p className="text-xs text-muted-foreground">
-            Click or drag files here
+            {isMobile ? 'Tap to open camera or select files' : 'Click or drag files here'}
           </p>
         </div>
       </Card>
