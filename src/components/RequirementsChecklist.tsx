@@ -18,7 +18,6 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
   const [requirements, setRequirements] = useState<TripRequirement[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showAffiliateDialog, setShowAffiliateDialog] = useState(false)
-  const [currentAffiliate, setCurrentAffiliate] = useState(0)
 
   useEffect(() => {
     const loadRequirements = async () => {
@@ -61,17 +60,6 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
       case 'entry': return 'Entry Documents (Destination Country)'
       case 'physical': return 'Physical Requirements'
       case 'optional': return 'Optional (Recommended)'
-    }
-  }
-
-  const nextAffiliate = () => {
-    const simPartners = AFFILIATE_PARTNERS.filter(p => p.category === 'sim')
-    const hotelPartners = AFFILIATE_PARTNERS.filter(p => p.category === 'hotel')
-    
-    if (currentAffiliate === 0) {
-      setCurrentAffiliate(1)
-    } else {
-      setShowAffiliateDialog(false)
     }
   }
 
@@ -264,49 +252,93 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
       </div>
 
       <Dialog open={showAffiliateDialog} onOpenChange={setShowAffiliateDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {currentAffiliate === 0 ? '📱 Need an eSIM?' : '🏨 Need a Hotel?'}
-            </DialogTitle>
-            <DialogDescription>
-              {currentAffiliate === 0
-                ? 'Get data for your trip without changing SIM cards'
-                : 'Find great accommodation deals for your destination'}
+            <DialogTitle className="text-base">Helpful Services for Your Trip</DialogTitle>
+            <DialogDescription className="text-xs">
+              Get what you need from our trusted partners
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            {currentAffiliate === 0 ? (
-              <div className="space-y-3">
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold text-muted-foreground">📱 eSIM & Data</p>
+              <div className="grid grid-cols-2 gap-1.5">
                 {AFFILIATE_PARTNERS.filter(p => p.category === 'sim').map(partner => (
                   <Button
                     key={partner.id}
                     variant="outline"
-                    className="w-full justify-start"
+                    size="sm"
+                    className="h-8 text-xs justify-start px-2"
                     onClick={() => window.open(partner.url, '_blank')}
                   >
-                    <span className="mr-2">{partner.logo}</span>
-                    {partner.name}
+                    <span className="mr-1 text-sm">{partner.logo}</span>
+                    <span className="truncate">{partner.name}</span>
                   </Button>
                 ))}
               </div>
-            ) : (
-              <div className="space-y-3">
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold text-muted-foreground">🏨 Hotels</p>
+              <div className="grid grid-cols-2 gap-1.5">
                 {AFFILIATE_PARTNERS.filter(p => p.category === 'hotel').map(partner => (
                   <Button
                     key={partner.id}
                     variant="outline"
-                    className="w-full justify-start"
+                    size="sm"
+                    className="h-8 text-xs justify-start px-2"
                     onClick={() => window.open(partner.url, '_blank')}
                   >
-                    <span className="mr-2">{partner.logo}</span>
-                    {partner.name}
+                    <span className="mr-1 text-sm">{partner.logo}</span>
+                    <span className="truncate">{partner.name}</span>
                   </Button>
                 ))}
               </div>
-            )}
-            <Button variant="ghost" onClick={nextAffiliate} className="w-full">
-              {currentAffiliate === 0 ? 'Next' : 'Close'}
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold text-muted-foreground">🎫 Tours & Activities</p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {AFFILIATE_PARTNERS.filter(p => p.category === 'tours').map(partner => (
+                  <Button
+                    key={partner.id}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs justify-start px-2"
+                    onClick={() => window.open(partner.url, '_blank')}
+                  >
+                    <span className="mr-1 text-sm">{partner.logo}</span>
+                    <span className="truncate">{partner.name}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold text-muted-foreground">🛡️ Insurance & Transport</p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {AFFILIATE_PARTNERS.filter(p => p.category === 'insurance' || p.category === 'transport').map(partner => (
+                  <Button
+                    key={partner.id}
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs justify-start px-2"
+                    onClick={() => window.open(partner.url, '_blank')}
+                  >
+                    <span className="mr-1 text-sm">{partner.logo}</span>
+                    <span className="truncate">{partner.name}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+            
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setShowAffiliateDialog(false)} 
+              className="w-full h-8 text-xs"
+            >
+              Close
             </Button>
           </div>
         </DialogContent>
