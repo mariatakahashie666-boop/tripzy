@@ -1,23 +1,100 @@
-# ✨ Welcome to Your Spark Template!
-You've just launched your brand-new Spark Template Codespace — everything’s fired up and ready for you to explore, build, and create with Spark!
+# Tripzy - Travel Document Automation Platform
 
-This template is your blank canvas. It comes with a minimal setup to help you get started quickly with Spark development.
+A GitHub Spark application that automates travel document processing by scanning passports and flight tickets to identify and pre-fill required travel documents.
 
-🚀 What's Inside?
-- A clean, minimal Spark environment
-- Pre-configured for local development
-- Ready to scale with your ideas
-  
-🧠 What Can You Do?
+## 🌟 About This Application
 
-Right now, this is just a starting point — the perfect place to begin building and testing your Spark applications.
+Tripzy is a travel document automation platform built on GitHub Spark that helps travelers:
+- Scan and extract data from passports and flight tickets
+- Automatically identify required travel documents based on nationality, origin, and destination
+- Pre-fill government forms with extracted information
+- Track document completion and submission
 
-🧹 Just Exploring?
-No problem! If you were just checking things out and don’t need to keep this code:
+See [PRD.md](./PRD.md) for detailed product requirements and features.
 
-- Simply delete your Spark.
-- Everything will be cleaned up — no traces left behind.
+## 🚀 GitHub Spark Integration
 
-📄 License For Spark Template Resources 
+This repository is configured as a GitHub Spark application with the following setup:
+
+### Spark Configuration Files
+- `spark.meta.json` - Spark metadata configuration (templateVersion: 1, dbType: kv)
+- `runtime.config.json` - Runtime app configuration
+- `.spark-initial-sha` - Initial commit tracking
+
+### Spark Runtime Features
+The application uses `@github/spark` package which provides:
+- **LLM Integration**: Access to language models via `window.spark.llm`
+- **Key-Value Storage**: Persistent storage via `window.spark.kv`
+- **User Management**: User authentication via `window.spark.user`
+
+### Vite Plugins
+The application includes Spark-specific Vite plugins in `vite.config.ts`:
+- `sparkPlugin()` - Core Spark runtime functionality
+- `vitePhosphorIconProxyPlugin()` - Icon optimization for better performance
+
+## 🛠️ Development
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+
+### Installation
+```bash
+npm install
+```
+
+### Development Server
+```bash
+npm run dev
+```
+Runs the application on http://localhost:5000
+
+### Build
+```bash
+npm run build
+```
+
+### Linting
+```bash
+npm run lint
+```
+
+## 📦 Technology Stack
+
+- **Framework**: React 19 with TypeScript
+- **Build Tool**: Vite 6
+- **Styling**: Tailwind CSS 4 with Radix UI components
+- **GitHub Spark**: Runtime integration for LLM and storage
+- **AI**: GPT-4o vision for document scanning
+- **UI Components**: shadcn/ui component library
+
+## 📁 Project Structure
+
+```
+tripzy/
+├── src/
+│   ├── components/      # React components
+│   ├── lib/            # Utility functions and services
+│   ├── hooks/          # Custom React hooks
+│   ├── types/          # TypeScript type definitions
+│   └── styles/         # CSS and theme files
+├── spark.meta.json     # Spark metadata
+├── runtime.config.json # Spark runtime configuration
+└── vite.config.ts      # Vite with Spark plugins
+```
+
+## 🔧 Spark Integration Details
+
+The Spark runtime is initialized in `src/main.tsx`:
+```typescript
+import "@github/spark/spark"
+```
+
+This import adds the `window.spark` global object with utilities for:
+- Making LLM API calls
+- Storing/retrieving data in key-value storage
+- Accessing authenticated user information
+
+## 📄 License
 
 The Spark Template files and resources from GitHub are licensed under the terms of the MIT license, Copyright GitHub, Inc.
