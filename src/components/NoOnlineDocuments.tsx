@@ -4,10 +4,9 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ExtractedData, TripRequirement } from '@/types'
-import { Sparkle, ShieldCheck, Ticket, Building, Compass, Info, ArrowSquareOut } from '@phosphor-icons/react'
+import { Sparkle, ShieldCheck, Ticket, Compass, Info, ArrowSquareOut } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
-import { AFFILIATE_PARTNERS } from '@/lib/constants'
-import PartnerLogo from '@/components/PartnerLogo'
+import OfferCard from '@/components/OfferCard'
 
 interface NoOnlineDocumentsProps {
   extractedData: ExtractedData
@@ -199,58 +198,18 @@ export default function NoOnlineDocuments({ extractedData, requirements, onProce
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {MOCK_OFFERS.map((offer, index) => (
-              <motion.div
+              <OfferCard
                 key={offer.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + index * 0.05 }}
-              >
-                <Card className="p-4 h-full flex flex-col hover:shadow-lg transition-shadow bg-card">
-                  <div className="flex items-start justify-between mb-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {offer.type === 'transport' ? '🚌' : offer.type === 'attraction' ? '🎭' : '🎪'} 
-                      {' '}{offer.type.charAt(0).toUpperCase() + offer.type.slice(1)}
-                    </Badge>
-                    <Badge className="bg-success text-success-foreground text-xs font-bold">
-                      {offer.discount}
-                    </Badge>
-                  </div>
-                  
-                  <h4 className="font-semibold text-sm mb-2 flex-1">{offer.title}</h4>
-                  
-                  <div className="space-y-2 mb-3">
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <PartnerLogo 
-                        logo={AFFILIATE_PARTNERS.find(p => p.name === offer.provider)?.logo || 'getyourguide'} 
-                        className="w-3 h-3" 
-                      />
-                      {offer.provider}
-                    </div>
-                    
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-lg font-bold text-success">
-                        ${offer.discountedPrice}
-                      </span>
-                      <span className="text-sm text-muted-foreground line-through">
-                        ${offer.originalPrice}
-                      </span>
-                    </div>
-                    
-                    <p className="text-xs text-success font-medium">
-                      Save ${offer.savings.toFixed(2)}
-                    </p>
-                  </div>
-                  
-                  <Button 
-                    size="sm" 
-                    className="w-full"
-                    onClick={() => window.open(offer.url, '_blank')}
-                  >
-                    Book Now
-                    <ArrowSquareOut className="ml-1" size={14} />
-                  </Button>
-                </Card>
-              </motion.div>
+                type={offer.type}
+                title={offer.title}
+                provider={offer.provider}
+                discount={offer.discount}
+                originalPrice={offer.originalPrice}
+                discountedPrice={offer.discountedPrice}
+                savings={offer.savings}
+                url={offer.url}
+                delay={0.2 + index * 0.05}
+              />
             ))}
           </div>
         </Card>

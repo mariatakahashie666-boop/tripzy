@@ -3,8 +3,9 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { TripRequirement, ExtractedData } from '@/types'
-import { CheckCircle, CreditCard } from '@phosphor-icons/react'
+import { CreditCard } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
+import PlanCard from '@/components/PlanCard'
 
 interface PaymentProps {
   requirements: TripRequirement[]
@@ -110,7 +111,6 @@ export default function Payment({ requirements, extractedData, onPaymentComplete
   
   const basePlanPrice = optionalServiceOnly ? 0 : (selectedPlan === 'oneway' ? 5 : 8)
   const planPrice = basePlanPrice + optionalItemsPrice + transitSurcharge
-  const isRoundTrip = selectedPlan === 'roundtrip'
   
   const oneWayFeatures = [
     'One-way documents',
@@ -141,80 +141,23 @@ export default function Payment({ requirements, extractedData, onPaymentComplete
 
       {!optionalServiceOnly && (
         <div className="flex gap-3 justify-center">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+          <PlanCard
+            title="One-Way"
+            price={5}
+            features={oneWayFeatures}
+            isSelected={selectedPlan === 'oneway'}
             onClick={() => setSelectedPlan('oneway')}
-            className="w-40"
-          >
-            <Card className={`p-3 cursor-pointer transition-all hover:shadow-lg ${
-              selectedPlan === 'oneway' 
-                ? 'border-primary border-2 shadow-md' 
-                : 'border-border hover:border-primary/50'
-            }`}>
-              <div className="space-y-2 text-center">
-                <div className="space-y-0.5">
-                  <h3 className="text-base font-semibold">One-Way</h3>
-                  <div className="text-2xl font-bold">$5</div>
-                </div>
-                
-                <div className="pt-1 border-t">
-                  <ul className="space-y-1 text-left">
-                    {oneWayFeatures.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-1.5">
-                        <CheckCircle 
-                          size={14} 
-                          className={`flex-shrink-0 mt-0.5 ${
-                            selectedPlan === 'oneway' ? 'text-primary' : 'text-muted-foreground'
-                          }`}
-                          weight="fill" 
-                        />
-                        <span className="text-xs leading-tight">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            delay={0}
+          />
+          <PlanCard
+            title="Round-Trip"
+            price={8}
+            features={roundTripFeatures}
+            isSelected={selectedPlan === 'roundtrip'}
             onClick={() => setSelectedPlan('roundtrip')}
-            className="w-40"
-          >
-            <Card className={`p-3 cursor-pointer transition-all hover:shadow-lg ${
-              selectedPlan === 'roundtrip' 
-                ? 'border-primary border-2 shadow-md' 
-                : 'border-border hover:border-primary/50'
-            }`}>
-              <div className="space-y-2 text-center">
-                <div className="space-y-0.5">
-                  <h3 className="text-base font-semibold">Round-Trip</h3>
-                  <div className="text-2xl font-bold">$8</div>
-                  <div className="text-[10px] text-success font-medium">Best Value</div>
-                </div>
-                
-                <div className="pt-1 border-t">
-                  <ul className="space-y-1 text-left">
-                    {roundTripFeatures.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-1.5">
-                        <CheckCircle 
-                          size={14} 
-                          className={`flex-shrink-0 mt-0.5 ${
-                            selectedPlan === 'roundtrip' ? 'text-primary' : 'text-muted-foreground'
-                          }`}
-                          weight="fill" 
-                        />
-                        <span className="text-xs leading-tight">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
+            badge="Best Value"
+            delay={1}
+          />
         </div>
       )}
 
