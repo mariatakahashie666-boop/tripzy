@@ -2,6 +2,8 @@
 
 A GitHub Spark application that automates travel document processing by scanning passports and flight tickets to identify and pre-fill required travel documents.
 
+🌐 **Live Demo**: [https://mariatakahashie666-boop.github.io/tripzy/](https://mariatakahashie666-boop.github.io/tripzy/)
+
 ## 🌟 About This Application
 
 Tripzy is a travel document automation platform built on GitHub Spark that helps travelers:
@@ -58,6 +60,29 @@ npm run build
 ```bash
 npm run lint
 ```
+
+### Preview Production Build
+```bash
+npm run preview
+```
+
+## 🚀 Deployment
+
+The application is automatically deployed to GitHub Pages when changes are pushed to the `main` branch.
+
+### Manual Deployment
+The deployment is handled by GitHub Actions workflow (`.github/workflows/deploy.yml`). The workflow:
+1. Builds the application with the correct base path for GitHub Pages
+2. Uploads the build artifacts
+3. Deploys to GitHub Pages
+
+To trigger a manual deployment, go to the Actions tab in GitHub and run the "Deploy to GitHub Pages" workflow.
+
+### GitHub Pages Configuration
+The repository must have GitHub Pages enabled:
+1. Go to Settings → Pages
+2. Set Source to "GitHub Actions"
+3. The site will be available at: `https://mariatakahashie666-boop.github.io/tripzy/`
 
 ## 📦 Technology Stack
 
