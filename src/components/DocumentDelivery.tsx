@@ -4,16 +4,23 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { ExtractedData, TripRequirement, TravelDocument } from '@/types'
-import { FilePdf, ArrowSquareOut, Warning, CheckCircle, ShieldCheck, Trash, MapTrifold, ForkKnife, Sparkle } from '@phosphor-icons/react'
+import { FilePdf, ArrowSquareOut, Warning, CheckCircle, Trash, MapTrifold, ForkKnife, Sparkle } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import { generateDocuments, generateItinerary } from '@/lib/ai-service'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
-import { useKV } from '@github/spark/hooks'
+import ItineraryItemCard from '@/components/ItineraryItemCard'
 
 interface DocumentDeliveryProps {
   extractedData: ExtractedData
   requirements: TripRequirement[]
   hasPaid: boolean
+}
+
+interface Itinerary {
+  restaurants?: Array<{ name: string; cuisine: string; description: string; mustTry: string }>
+  attractions?: Array<{ name: string; category: string; description: string; tip: string }>
+  foods?: Array<{ name: string; description: string; where: string }>
+  mustDo?: Array<{ activity: string; description: string; bestTime: string }>
 }
 
 export default function DocumentDelivery({ extractedData, requirements, hasPaid }: DocumentDeliveryProps) {
@@ -23,12 +30,9 @@ export default function DocumentDelivery({ extractedData, requirements, hasPaid 
   const [showCongratsPage, setShowCongratsPage] = useState(false)
   const [showLawsDialog, setShowLawsDialog] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [wantsLaws, setWantsLaws] = useState<boolean | null>(null)
-  const [itinerary, setItinerary] = useState<any>(null)
+  const [itinerary, setItinerary] = useState<Itinerary | null>(null)
   const [isGeneratingItinerary, setIsGeneratingItinerary] = useState(false)
   const [showItinerary, setShowItinerary] = useState(false)
-  
-  const [userData] = useKV<any>('user-travel-data', undefined)
 
   const hasItineraryOption = requirements.some(req => req.id === 'ai-itinerary' && req.userHas)
 
@@ -416,19 +420,15 @@ export default function DocumentDelivery({ extractedData, requirements, hasPaid 
                 </h3>
                 <div className="space-y-3">
                   {itinerary.restaurants?.map((restaurant: any, index: number) => (
-                    <Card key={index} className="p-4">
-                      <div className="flex gap-3">
-                        <Badge className="shrink-0 h-6">{index + 1}</Badge>
-                        <div className="flex-1">
-                          <h4 className="font-semibold">{restaurant.name}</h4>
-                          <p className="text-sm text-muted-foreground mt-1">{restaurant.cuisine}</p>
-                          <p className="text-sm mt-2">{restaurant.description}</p>
-                          <p className="text-sm text-accent font-medium mt-2">
-                            🍽️ Must Try: {restaurant.mustTry}
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
+                    <ItineraryItemCard
+                      key={index}
+                      index={index}
+                      title={restaurant.name}
+                      subtitle={restaurant.cuisine}
+                      description={restaurant.description}
+                      extraInfo={`Must Try: ${restaurant.mustTry}`}
+                      extraInfoEmoji="🍽️"
+                    />
                   ))}
                 </div>
               </div>
@@ -440,21 +440,15 @@ export default function DocumentDelivery({ extractedData, requirements, hasPaid 
                 </h3>
                 <div className="space-y-3">
                   {itinerary.attractions?.map((place: any, index: number) => (
-                    <Card key={index} className="p-4">
-                      <div className="flex gap-3">
-                        <Badge className="shrink-0 h-6">{index + 1}</Badge>
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <h4 className="font-semibold">{place.name}</h4>
-                            <Badge variant="outline" className="text-xs">{place.category}</Badge>
-                          </div>
-                          <p className="text-sm mt-2">{place.description}</p>
-                          <p className="text-sm text-accent font-medium mt-2">
-                            💡 Tip: {place.tip}
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
+                    <ItineraryItemCard
+                      key={index}
+                      index={index}
+                      title={place.name}
+                      description={place.description}
+                      badge={place.category}
+                      extraInfo={`Tip: ${place.tip}`}
+                      extraInfoEmoji="💡"
+                    />
                   ))}
                 </div>
               </div>
@@ -465,18 +459,14 @@ export default function DocumentDelivery({ extractedData, requirements, hasPaid 
                 </h3>
                 <div className="space-y-3">
                   {itinerary.foods?.map((food: any, index: number) => (
-                    <Card key={index} className="p-4">
-                      <div className="flex gap-3">
-                        <Badge className="shrink-0 h-6">{index + 1}</Badge>
-                        <div className="flex-1">
-                          <h4 className="font-semibold">{food.name}</h4>
-                          <p className="text-sm mt-1">{food.description}</p>
-                          <p className="text-sm text-muted-foreground mt-2">
-                            📍 Where: {food.where}
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
+                    <ItineraryItemCard
+                      key={index}
+                      index={index}
+                      title={food.name}
+                      description={food.description}
+                      extraInfo={`Where: ${food.where}`}
+                      extraInfoEmoji="📍"
+                    />
                   ))}
                 </div>
               </div>
@@ -487,18 +477,14 @@ export default function DocumentDelivery({ extractedData, requirements, hasPaid 
                 </h3>
                 <div className="space-y-3">
                   {itinerary.mustDo?.map((activity: any, index: number) => (
-                    <Card key={index} className="p-4">
-                      <div className="flex gap-3">
-                        <Badge className="shrink-0 h-6">{index + 1}</Badge>
-                        <div className="flex-1">
-                          <h4 className="font-semibold">{activity.activity}</h4>
-                          <p className="text-sm mt-1">{activity.description}</p>
-                          <p className="text-sm text-muted-foreground mt-2">
-                            🕐 Best Time: {activity.bestTime}
-                          </p>
-                        </div>
-                      </div>
-                    </Card>
+                    <ItineraryItemCard
+                      key={index}
+                      index={index}
+                      title={activity.activity}
+                      description={activity.description}
+                      extraInfo={`Best Time: ${activity.bestTime}`}
+                      extraInfoEmoji="🕐"
+                    />
                   ))}
                 </div>
               </div>
