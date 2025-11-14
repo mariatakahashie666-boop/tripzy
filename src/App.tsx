@@ -71,7 +71,7 @@ function App() {
     }
   }
 
-  const handlePaymentComplete = (plan: 'standard' | 'premium') => {
+  const handlePaymentComplete = () => {
     setHasPaid(true)
     setCurrentStep(5)
   }

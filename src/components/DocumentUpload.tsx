@@ -5,17 +5,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { CloudArrowUp, File, X, Eye, Warning, CheckCircle, Pencil, Camera, DeviceMobile, Desktop } from '@phosphor-icons/react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { ExtractedData } from '@/types'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { FileWithPreview, processFileList } from '@/lib/file-utils'
 
 interface DocumentUploadProps {
   onUploadComplete: (files: File[]) => void
-}
-
-interface FileWithPreview extends File {
-  preview?: string
 }
 
 export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
@@ -51,54 +48,33 @@ export default function DocumentUpload({ onUploadComplete }: DocumentUploadProps
     }
   }, [])
 
-  const createFilePreview = (file: File): Promise<FileWithPreview> => {
-    return new Promise((resolve) => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          const fileWithPreview = Object.assign(file, { preview: reader.result as string })
-          resolve(fileWithPreview)
-        }
-        reader.readAsDataURL(file)
-      } else {
-        resolve(file)
-      }
-    })
-  }
-
   const handleDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setDragActive(false)
 
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const newFiles = Array.from(e.dataTransfer.files).slice(0, 5 - files.length)
-      const filesWithPreviews = await Promise.all(newFiles.map(createFilePreview))
-      
-      if (filesWithPreviews.length === 1 && filesWithPreviews[0].type.startsWith('image/')) {
-        setPreviewFile(filesWithPreviews[0])
-        setPreviewOpen(true)
-      } else {
-        setFiles(prev => [...prev, ...filesWithPreviews].slice(0, 5))
-      }
+    const filesWithPreviews = await processFileList(e.dataTransfer.files, 5, files.length)
+    
+    if (filesWithPreviews.length === 1 && filesWithPreviews[0].type.startsWith('image/')) {
+      setPreviewFile(filesWithPreviews[0])
+      setPreviewOpen(true)
+    } else {
+      setFiles(prev => [...prev, ...filesWithPreviews].slice(0, 5))
     }
   }, [files.length])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'passport' | 'ticket' | 'additional') => {
-    if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files).slice(0, 5 - files.length)
-      const filesWithPreviews = await Promise.all(newFiles.map(createFilePreview))
-      
-      if (filesWithPreviews.length === 1 && filesWithPreviews[0].type.startsWith('image/')) {
-        setPreviewFile(filesWithPreviews[0])
-        setPreviewOpen(true)
-        if (type === 'passport') setPassportUploaded(true)
-        if (type === 'ticket') setTicketUploaded(true)
-      } else {
-        setFiles(prev => [...prev, ...filesWithPreviews].slice(0, 5))
-        if (type === 'passport') setPassportUploaded(true)
-        if (type === 'ticket') setTicketUploaded(true)
-      }
+    const filesWithPreviews = await processFileList(e.target.files, 5, files.length)
+    
+    if (filesWithPreviews.length === 1 && filesWithPreviews[0].type.startsWith('image/')) {
+      setPreviewFile(filesWithPreviews[0])
+      setPreviewOpen(true)
+      if (type === 'passport') setPassportUploaded(true)
+      if (type === 'ticket') setTicketUploaded(true)
+    } else if (filesWithPreviews.length > 0) {
+      setFiles(prev => [...prev, ...filesWithPreviews].slice(0, 5))
+      if (type === 'passport') setPassportUploaded(true)
+      if (type === 'ticket') setTicketUploaded(true)
     }
     e.target.value = ''
   }

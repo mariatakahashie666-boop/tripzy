@@ -3,13 +3,12 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ExtractedData, TripRequirement } from '@/types'
-import { ListChecks, Airplane, Shield, Star, ArrowSquareOut, ShieldCheck } from '@phosphor-icons/react'
+import { Shield, ShieldCheck } from '@phosphor-icons/react'
 import { motion } from 'framer-motion'
 import { analyzeRequirements } from '@/lib/ai-service'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
-import { AFFILIATE_PARTNERS } from '@/lib/constants'
 import { Badge } from '@/components/ui/badge'
-import PartnerLogo from '@/components/PartnerLogo'
+import AffiliatePartnerSection from '@/components/AffiliatePartnerSection'
 
 interface RequirementsChecklistProps {
   extractedData: ExtractedData
@@ -50,25 +49,7 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
     )
   }
 
-  const getCategoryIcon = (category: TripRequirement['category']) => {
-    switch (category) {
-      case 'exit': return '🛫'
-      case 'entry': return '🛬'
-      case 'transit': return '🔄'
-      case 'physical': return '📋'
-      case 'optional': return '⭐'
-    }
-  }
 
-  const getCategoryTitle = (category: TripRequirement['category']) => {
-    switch (category) {
-      case 'exit': return 'Exit Documents (Departure Country)'
-      case 'entry': return 'Entry Documents (Destination Country)'
-      case 'transit': return 'Transit Documents (Connecting Flights)'
-      case 'physical': return 'Must Carry Physically'
-      case 'optional': return 'Optional (Recommended)'
-    }
-  }
 
   if (isLoading) {
     return (
@@ -266,85 +247,10 @@ export default function RequirementsChecklist({ extractedData, onProceed }: Requ
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <div className="space-y-1.5">
-              <p className="text-xs font-semibold text-muted-foreground">📱 eSIM & Data</p>
-              <div className="grid grid-cols-2 gap-1.5">
-                {AFFILIATE_PARTNERS.filter(p => p.category === 'sim').map(partner => (
-                  <Button
-                    key={partner.id}
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs justify-start px-2"
-                    onClick={() => window.open(partner.url, '_blank')}
-                  >
-                    <span className="mr-1.5 flex-shrink-0">
-                      <PartnerLogo logo={partner.logo} className="w-4 h-4" />
-                    </span>
-                    <span className="truncate">{partner.name}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <p className="text-xs font-semibold text-muted-foreground">🏨 Hotels</p>
-              <div className="grid grid-cols-2 gap-1.5">
-                {AFFILIATE_PARTNERS.filter(p => p.category === 'hotel').map(partner => (
-                  <Button
-                    key={partner.id}
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs justify-start px-2"
-                    onClick={() => window.open(partner.url, '_blank')}
-                  >
-                    <span className="mr-1.5 flex-shrink-0">
-                      <PartnerLogo logo={partner.logo} className="w-4 h-4" />
-                    </span>
-                    <span className="truncate">{partner.name}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <p className="text-xs font-semibold text-muted-foreground">🎫 Tours & Activities</p>
-              <div className="grid grid-cols-2 gap-1.5">
-                {AFFILIATE_PARTNERS.filter(p => p.category === 'tours').map(partner => (
-                  <Button
-                    key={partner.id}
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs justify-start px-2"
-                    onClick={() => window.open(partner.url, '_blank')}
-                  >
-                    <span className="mr-1.5 flex-shrink-0">
-                      <PartnerLogo logo={partner.logo} className="w-4 h-4" />
-                    </span>
-                    <span className="truncate">{partner.name}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <p className="text-xs font-semibold text-muted-foreground">🛡️ Insurance & Transport</p>
-              <div className="grid grid-cols-2 gap-1.5">
-                {AFFILIATE_PARTNERS.filter(p => p.category === 'insurance' || p.category === 'transport').map(partner => (
-                  <Button
-                    key={partner.id}
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs justify-start px-2"
-                    onClick={() => window.open(partner.url, '_blank')}
-                  >
-                    <span className="mr-1.5 flex-shrink-0">
-                      <PartnerLogo logo={partner.logo} className="w-4 h-4" />
-                    </span>
-                    <span className="truncate">{partner.name}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
+            <AffiliatePartnerSection title="eSIM & Data" emoji="📱" categories={['sim']} />
+            <AffiliatePartnerSection title="Hotels" emoji="🏨" categories={['hotel']} />
+            <AffiliatePartnerSection title="Tours & Activities" emoji="🎫" categories={['tours']} />
+            <AffiliatePartnerSection title="Insurance & Transport" emoji="🛡️" categories={['insurance', 'transport']} />
             
             <Button 
               variant="ghost" 
